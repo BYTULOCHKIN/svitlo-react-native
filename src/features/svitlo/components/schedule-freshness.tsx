@@ -1,20 +1,19 @@
 import type { ScheduleSnapshot } from '../schedule-repository';
-import { Text, View } from 'react-native';
-import { palette } from '../theme';
+import { View } from 'react-native';
+import { AppText as Text } from '@/design-system/text';
+import { palette, space, typography } from '@/design-system/tokens';
 
 export function ScheduleFreshness({ snapshot, current, fetching, failed }: { snapshot?: ScheduleSnapshot; current: boolean; fetching: boolean; failed: boolean }) {
   if (!snapshot)
     return null;
   return (
-    <View style={{ paddingHorizontal: 16, paddingBottom: 16, gap: 4 }}>
-      <Text style={{ color: current ? palette.secondary : '#FFA726', fontSize: 12 }}>{current ? `Графік на ${snapshot.day.date}` : `Збережений графік на ${snapshot.day.date}. Даних на сьогодні немає.`}</Text>
-      <Text style={{ color: palette.secondary, fontSize: 12 }}>
-        {fetching ? 'Оновлення… ' : failed ? 'Показано збережені дані. ' : ''}
-        Отримано:
-        {' '}
-        {new Date(snapshot.updatedAt).toLocaleString('uk-UA')}
+    <View style={{ gap: space.xs }}>
+      {!current && <Text style={[typography.caption, { color: palette.warning }]}>{`Збережений графік на ${snapshot.day.date}. Даних на сьогодні немає.`}</Text>}
+      <Text style={[typography.caption, { color: palette.secondary }]}>
+        {fetching ? 'Оновлення… · ' : failed ? 'Збережені дані · ' : ''}
+        {`Отримано ${new Date(snapshot.updatedAt).toLocaleString('uk-UA', { timeZone: 'Europe/Kyiv', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })} (Київ)`}
       </Text>
-      {snapshot.persistenceWarning && <Text style={{ color: '#FFA726', fontSize: 12 }}>Не вдалося зберегти графік на пристрої. Після перезапуску він може бути недоступний.</Text>}
+      {snapshot.persistenceWarning && <Text style={[typography.caption, { color: palette.warning }]}>Не вдалося зберегти графік на пристрої. Після перезапуску він може бути недоступний.</Text>}
     </View>
   );
 }

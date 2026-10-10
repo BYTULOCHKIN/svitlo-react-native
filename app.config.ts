@@ -1,10 +1,8 @@
+/* eslint-disable perfectionist/sort-imports -- Register the TS loader before local TypeScript imports. */
 import type { ConfigContext, ExpoConfig } from '@expo/config';
-
 import 'tsx/cjs';
-
-// adding lint exception as we need to import tsx/cjs before env.ts is imported
-// eslint-disable-next-line perfectionist/sort-imports
 import Env from './env';
+import { metrics, palette } from './src/design-system/tokens';
 
 const EXPO_ACCOUNT_OWNER = process.env.EXPO_ACCOUNT_OWNER;
 const EAS_PROJECT_ID = process.env.EAS_PROJECT_ID;
@@ -19,7 +17,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   version: Env.EXPO_PUBLIC_VERSION.toString(),
   orientation: 'portrait',
   icon: './assets/icon.png',
-  userInterfaceStyle: 'automatic',
+  userInterfaceStyle: 'dark',
   newArchEnabled: true,
   updates: {
     fallbackToCacheTimeout: 0,
@@ -38,7 +36,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   android: {
     adaptiveIcon: {
       foregroundImage: './assets/adaptive-icon.png',
-      backgroundColor: '#E6E5E5',
+      backgroundColor: palette.launcherBackground,
     },
     package: Env.EXPO_PUBLIC_PACKAGE,
   },
@@ -50,9 +48,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     [
       'expo-splash-screen',
       {
-        backgroundColor: '#1B1B1B',
+        backgroundColor: palette.background,
         image: './assets/splash-icon.png',
-        imageWidth: 150,
+        imageWidth: metrics.splashWidth,
         resizeMode: 'contain',
       },
     ],

@@ -1,8 +1,11 @@
 import type { Location, LocationIcon } from '../models';
 import { useState } from 'react';
-import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { KeyboardAvoidingView, Modal, Platform, ScrollView, TextInput, View } from 'react-native';
+import { AppPressable as Pressable } from '@/design-system/pressable';
+import { AppText as Text } from '@/design-system/text';
+import { fonts, metrics, palette, radius, space, typography } from '@/design-system/tokens';
 import { useLocations } from '../location-store';
-import { palette } from '../theme';
+
 import { SvitloIcon } from './svitlo-icon';
 
 const icons: { icon: LocationIcon; label: string }[] = [
@@ -44,27 +47,27 @@ export function LocationDialog({ location, queues, onClose }: Props) {
   }
   return (
     <Modal visible transparent animationType="fade" onRequestClose={onClose}>
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1, backgroundColor: '#00000099', justifyContent: 'center', padding: 24 }}>
-        <View accessibilityViewIsModal style={{ backgroundColor: palette.card, borderRadius: 28, padding: 24, maxHeight: '90%' }}>
-          <Text style={{ fontSize: 24, color: palette.text, marginBottom: 16 }}>{location ? 'Редагувати' : 'Нова локація'}</Text>
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1, backgroundColor: palette.overlay, justifyContent: 'center', padding: space.xxl }}>
+        <View accessibilityViewIsModal style={{ backgroundColor: palette.card, borderRadius: radius.dialog, padding: space.xxl, maxHeight: metrics.dialogMaxHeight }}>
+          <Text style={{ ...typography.title, color: palette.text, marginBottom: space.lg }}>{location ? 'Редагувати' : 'Нова локація'}</Text>
           <ScrollView keyboardShouldPersistTaps="handled">
-            <Text style={{ color: palette.secondary, marginBottom: 6 }}>Назва локації</Text>
-            <TextInput accessibilityLabel="Назва локації" value={name} onChangeText={setName} maxLength={20} placeholder="Назва локації" placeholderTextColor={palette.muted} style={{ color: palette.text, borderWidth: 1, borderColor: palette.green, borderRadius: 8, padding: 12, marginBottom: 16 }} />
-            <Text style={{ color: palette.secondary, marginBottom: 8 }}>Оберіть іконку</Text>
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 16 }}>
-              {icons.map(choice => <Pressable key={choice.icon} accessibilityRole="button" accessibilityLabel={`Іконка: ${choice.label}`} accessibilityState={{ selected: icon === choice.icon }} onPress={() => setIcon(choice.icon)} style={{ width: '17%', minHeight: 44, alignItems: 'center', justifyContent: 'center', borderRadius: 12, backgroundColor: icon === choice.icon ? '#2ECC7126' : '#FFFFFF0D', borderWidth: 1, borderColor: icon === choice.icon ? palette.green : 'transparent' }}><SvitloIcon name={choice.icon} color={icon === choice.icon ? palette.green : palette.secondary} size={20} /></Pressable>)}
+            <Text style={{ color: palette.secondary, marginBottom: space.sm }}>Назва локації</Text>
+            <TextInput accessibilityLabel="Назва локації" value={name} onChangeText={setName} maxLength={20} placeholder="Назва локації" placeholderTextColor={palette.muted} style={{ ...typography.body, minHeight: metrics.touchTarget, color: palette.text, borderWidth: metrics.hairline, borderColor: palette.green, borderRadius: radius.control, padding: space.md, marginBottom: space.lg }} />
+            <Text style={{ color: palette.secondary, marginBottom: space.sm }}>Оберіть іконку</Text>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space.sm, marginBottom: space.lg }}>
+              {icons.map(choice => <Pressable android_ripple={{ color: palette.pressed }} key={choice.icon} accessibilityRole="button" accessibilityLabel={`Іконка: ${choice.label}`} accessibilityState={{ selected: icon === choice.icon }} onPress={() => setIcon(choice.icon)} style={{ width: metrics.iconChoiceWidth, minHeight: metrics.touchTarget, alignItems: 'center', justifyContent: 'center', borderRadius: radius.control, backgroundColor: icon === choice.icon ? palette.selected : palette.subtle, borderWidth: metrics.hairline, borderColor: icon === choice.icon ? palette.green : palette.transparent }}><SvitloIcon name={choice.icon} color={icon === choice.icon ? palette.green : palette.secondary} size={metrics.icon} /></Pressable>)}
             </View>
-            <Text style={{ color: palette.secondary, marginBottom: 8 }}>Оберіть чергу</Text>
+            <Text style={{ color: palette.secondary, marginBottom: space.sm }}>Оберіть чергу</Text>
             {!choices.length && <Text style={{ color: palette.secondary }}>Немає доступних черг. Оновіть графік.</Text>}
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-              {choices.map(choice => <Pressable key={choice} accessibilityRole="button" accessibilityLabel={`Черга ${choice}`} accessibilityState={{ selected: choice === queue }} onPress={() => setQueue(choice)} style={{ minWidth: '29%', padding: 12, borderRadius: 10, alignItems: 'center', backgroundColor: choice === queue ? palette.green : '#FFFFFF1A' }}><Text style={{ color: choice === queue ? palette.background : palette.text, fontWeight: 'bold' }}>{choice}</Text></Pressable>)}
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space.sm }}>
+              {choices.map(choice => <Pressable android_ripple={{ color: palette.pressed }} key={choice} accessibilityRole="button" accessibilityLabel={`Черга ${choice}`} accessibilityState={{ selected: choice === queue }} onPress={() => setQueue(choice)} style={{ minWidth: metrics.queueMinWidth, padding: space.md, borderRadius: radius.control, alignItems: 'center', backgroundColor: choice === queue ? palette.green : palette.subtle }}><Text style={{ color: choice === queue ? palette.background : palette.text, fontFamily: fonts.semibold }}>{choice}</Text></Pressable>)}
             </View>
-            {!!error && <Text accessibilityRole="alert" style={{ color: palette.red, paddingVertical: 12 }}>{error}</Text>}
+            {!!error && <Text accessibilityRole="alert" style={{ color: palette.red, paddingVertical: space.md }}>{error}</Text>}
           </ScrollView>
-          <View style={{ flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', gap: 12, marginTop: 16 }}>
-            {location && <Pressable accessibilityRole="button" accessibilityLabel="Видалити локацію" onPress={deleteLocation} style={{ marginRight: 'auto', padding: 12 }}><SvitloIcon name="trash" color={palette.red} /></Pressable>}
-            <Pressable accessibilityRole="button" onPress={onClose} style={{ padding: 12 }}><Text style={{ color: palette.secondary }}>Скасувати</Text></Pressable>
-            <Pressable accessibilityRole="button" accessibilityState={{ disabled: !name.trim() || !queue }} disabled={!name.trim() || !queue} onPress={save} style={{ borderRadius: 24, padding: 12, backgroundColor: name.trim() && queue ? palette.green : palette.muted }}><Text style={{ color: palette.background }}>Зберегти</Text></Pressable>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'flex-end', alignItems: 'center', gap: space.md, marginTop: space.lg }}>
+            {location && <Pressable android_ripple={{ color: palette.pressed }} accessibilityRole="button" accessibilityLabel="Видалити локацію" onPress={deleteLocation} style={{ marginRight: 'auto', padding: space.md }}><SvitloIcon name="trash" color={palette.red} /></Pressable>}
+            <Pressable android_ripple={{ color: palette.pressed }} accessibilityRole="button" onPress={onClose} style={{ padding: space.md }}><Text style={{ color: palette.secondary }}>Скасувати</Text></Pressable>
+            <Pressable android_ripple={{ color: palette.pressed }} accessibilityRole="button" accessibilityState={{ disabled: !name.trim() || !queue }} disabled={!name.trim() || !queue} onPress={save} style={{ borderRadius: radius.dialog, padding: space.md, backgroundColor: name.trim() && queue ? palette.green : palette.muted }}><Text style={{ color: palette.background }}>Зберегти</Text></Pressable>
           </View>
         </View>
       </KeyboardAvoidingView>

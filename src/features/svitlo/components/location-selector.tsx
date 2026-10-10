@@ -1,8 +1,11 @@
 import type { Location } from '../models';
 import { useState } from 'react';
-import { Modal, Pressable, ScrollView, Text, View } from 'react-native';
+import { Modal, ScrollView, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { AppPressable as Pressable } from '@/design-system/pressable';
+import { AppText as Text } from '@/design-system/text';
+import { metrics, motion, palette, radius, space, typography } from '@/design-system/tokens';
 import { useLocations } from '../location-store';
-import { palette } from '../theme';
 import { LocationDialog } from './location-dialog';
 import { SvitloIcon } from './svitlo-icon';
 
@@ -23,49 +26,55 @@ export function LocationSelector({ queues }: { queues: string[] }) {
   }
   return (
     <>
-      <Pressable accessibilityRole="button" accessibilityLabel="Обрати локацію" onPress={() => setExpanded(true)} style={{ marginHorizontal: 16, marginBottom: 16, padding: 16, borderRadius: 20, borderWidth: 1, borderColor: '#FFFFFF1A', backgroundColor: '#0000004D', flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-        <SvitloIcon name={selected.icon} color={palette.green} />
-        <Text style={{ flex: 1, color: palette.text, fontSize: 18 }}>{selected.name}</Text>
-        <Text style={{ color: palette.green, fontWeight: 'bold' }}>{`Черга: ${selected.queue} ⌄`}</Text>
+      <Pressable android_ripple={{ color: palette.pressed }} accessibilityRole="button" accessibilityLabel={`Обрати локацію: ${selected.name}, черга ${selected.queue}`} onPress={() => setExpanded(true)} style={({ pressed }) => ({ minHeight: metrics.touchTarget, padding: space.md, borderRadius: radius.control, borderWidth: metrics.hairline, borderColor: palette.border, backgroundColor: palette.card, flexDirection: 'row', alignItems: 'center', gap: space.md, opacity: pressed ? motion.pressedOpacity : 1 })}>
+        <SvitloIcon name={selected.icon} color={palette.green} size={metrics.icon} />
+        <View style={{ flex: 1, minWidth: 0, gap: space.xxs }}>
+          <Text style={typography.emphasis}>{selected.name}</Text>
+          <Text style={[typography.caption, { color: palette.secondary }]}>{`Черга ${selected.queue}`}</Text>
+        </View>
+        <SvitloIcon name="chevronDown" color={palette.secondary} size={metrics.iconSmall} />
       </Pressable>
-      {!!error && <Text accessibilityRole="alert" style={{ color: palette.red, padding: 16 }}>{error}</Text>}
+      {!!error && <Text accessibilityRole="alert" style={{ color: palette.red, padding: space.lg }}>{error}</Text>}
       <Modal visible={expanded} transparent animationType="fade" onRequestClose={() => setExpanded(false)}>
-        <Pressable accessibilityLabel="Закрити вибір локації" onPress={() => setExpanded(false)} style={{ flex: 1, backgroundColor: '#00000066', paddingTop: 130, paddingHorizontal: 16 }}>
-          <View accessibilityViewIsModal style={{ backgroundColor: palette.card, borderRadius: 16, padding: 8, maxHeight: '65%' }}>
+        <SafeAreaView style={{ flex: 1, backgroundColor: palette.overlay, padding: space.lg, justifyContent: 'center' }}>
+          <Pressable android_ripple={{ color: palette.pressed }} accessibilityRole="button" accessibilityLabel="Закрити вибір локації" onPress={() => setExpanded(false)} style={{ position: 'absolute', inset: 0 }} />
+          <View accessibilityViewIsModal style={{ backgroundColor: palette.card, borderRadius: radius.dialog, padding: space.sm, maxHeight: metrics.pickerMaxHeight }}>
             <ScrollView>
               {locations.map(location => (
-                <View key={location.id} style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: location.id === selectedId ? '#2ECC7126' : 'transparent' }}>
-                  <Pressable accessibilityRole="button" accessibilityLabel={`Локація ${location.name}, черга ${location.queue}`} accessibilityState={{ selected: location.id === selectedId }} onPress={() => choose(location.id)} style={{ flex: 1, flexDirection: 'row', gap: 12, padding: 16 }}>
+                <View key={location.id} style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: location.id === selectedId ? palette.selected : palette.transparent }}>
+                  <Pressable android_ripple={{ color: palette.pressed }} accessibilityRole="button" accessibilityLabel={`Локація ${location.name}, черга ${location.queue}`} accessibilityState={{ selected: location.id === selectedId }} onPress={() => choose(location.id)} style={{ flex: 1, flexDirection: 'row', gap: space.md, padding: space.lg }}>
                     <SvitloIcon name={location.icon} color={palette.green} />
-                    <Text style={{ color: palette.text }}>{`${location.name} (${location.queue})`}</Text>
+                    <Text style={{ flex: 1, minWidth: 0 }}>{`${location.name} (${location.queue})`}</Text>
                   </Pressable>
                   <Pressable
+                    android_ripple={{ color: palette.pressed }}
                     accessibilityRole="button"
                     accessibilityLabel={`Редагувати ${location.name}`}
                     onPress={() => {
                       setExpanded(false);
                       setEditing(location);
                     }}
-                    style={{ padding: 16 }}
+                    style={{ padding: space.lg, minHeight: metrics.touchTarget }}
                   >
-                    <SvitloIcon name="edit" size={20} color={palette.secondary} />
+                    <SvitloIcon name="edit" size={metrics.icon} color={palette.secondary} />
                   </Pressable>
                 </View>
               ))}
               <Pressable
+                android_ripple={{ color: palette.pressed }}
                 accessibilityRole="button"
                 onPress={() => {
                   setExpanded(false);
                   setEditing(null);
                 }}
-                style={{ flexDirection: 'row', gap: 12, padding: 16 }}
+                style={{ flexDirection: 'row', gap: space.md, padding: space.lg }}
               >
                 <SvitloIcon name="plus" color={palette.green} />
                 <Text style={{ color: palette.green }}>Додати локацію</Text>
               </Pressable>
             </ScrollView>
           </View>
-        </Pressable>
+        </SafeAreaView>
       </Modal>
       {editing !== undefined && <LocationDialog location={editing ?? undefined} queues={queues} onClose={() => setEditing(undefined)} />}
     </>

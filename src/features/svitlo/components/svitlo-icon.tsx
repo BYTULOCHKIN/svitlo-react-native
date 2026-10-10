@@ -1,6 +1,8 @@
 import Svg, { Path } from 'react-native-svg';
+import { metrics, palette } from '@/design-system/tokens';
 
 const paths = {
+  chevronDown: 'M6 9L12 15L18 9',
   home: 'M3 10L12 3L21 10V21H15V14H9V21H3Z',
   list: 'M7 6H21M7 12H21M7 18H21M3 6H3.1M3 12H3.1M3 18H3.1',
   bell: 'M6 8A6 6 0 0 1 18 8V14L21 18H3L6 14ZM10 21H14',
@@ -17,6 +19,6 @@ const paths = {
   plus: 'M12 4V20M4 12H20',
 };
 
-export function SvitloIcon({ name, color = '#FFFFFF', size = 24 }: { name: keyof typeof paths; color?: string; size?: number }) {
-  return <Svg width={size} height={size} viewBox="0 0 24 24"><Path d={paths[name]} stroke={color} strokeWidth={1.8} fill="none" strokeLinecap="round" strokeLinejoin="round" /></Svg>;
+export function SvitloIcon({ name, color = palette.text, size = metrics.icon }: { name: keyof typeof paths; color?: string; size?: number }) {
+  return <Svg width={size} height={size} viewBox="0 0 24 24"><Path d={paths[name]} stroke={color} strokeWidth={metrics.iconStroke} fill="none" strokeLinecap="round" strokeLinejoin="round" /></Svg>;
 }

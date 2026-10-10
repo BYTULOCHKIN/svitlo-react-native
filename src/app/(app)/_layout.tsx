@@ -1,4 +1,5 @@
 import { Tabs } from 'expo-router';
+import { metrics, typography } from '@/design-system/tokens';
 import { SvitloIcon } from '@/features/svitlo/components/svitlo-icon';
 import { palette } from '@/features/svitlo/theme';
 
@@ -9,8 +10,8 @@ export default function TabLayout() {
       sceneStyle: { backgroundColor: palette.background },
       tabBarActiveTintColor: palette.green,
       tabBarInactiveTintColor: palette.muted,
-      tabBarStyle: { backgroundColor: palette.card, borderTopColor: palette.border },
-      tabBarLabelStyle: { fontSize: 11 },
+      tabBarStyle: { backgroundColor: palette.card, borderTopColor: palette.border, borderTopWidth: metrics.hairline },
+      tabBarLabelStyle: typography.caption,
     }}
     >
       <Tabs.Screen name="index" options={{ title: 'Головна', tabBarIcon: ({ color }) => <SvitloIcon name="home" color={color} /> }} />

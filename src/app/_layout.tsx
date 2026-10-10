@@ -1,18 +1,25 @@
 import type { ViewProps } from 'react-native';
-import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
+import { Inter_400Regular } from '@expo-google-fonts/inter/400Regular';
+import { Inter_500Medium } from '@expo-google-fonts/inter/500Medium';
+import { Inter_600SemiBold } from '@expo-google-fonts/inter/600SemiBold';
+import { Inter_700Bold } from '@expo-google-fonts/inter/700Bold';
 
+import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { ThemeProvider } from '@react-navigation/native';
+import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
+import { StatusBar } from 'expo-status-bar';
 import * as React from 'react';
 import { StyleSheet } from 'react-native';
 import FlashMessage from 'react-native-flash-message';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
-import { useThemeConfig } from '@/components/ui/use-theme-config';
+import { Uniwind } from 'uniwind';
 
+import { getAppTheme } from '@/components/ui/use-theme-config';
+import { metrics, palette } from '@/design-system/tokens';
 import { APIProvider } from '@/lib/api';
-import { loadSelectedTheme } from '@/lib/hooks/use-selected-theme';
 // Import  global CSS file
 import '../global.css';
 
@@ -23,16 +30,17 @@ export const unstable_settings = {
   initialRouteName: '(app)',
 };
 
-loadSelectedTheme();
+Uniwind.setTheme('dark');
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 // Set the animation options. This is optional.
 SplashScreen.setOptions({
-  duration: 500,
+  duration: metrics.splashFadeDuration,
   fade: true,
 });
 
 export default function RootLayout() {
+  const [fontsLoaded, fontError] = useFonts({ Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold });
   const hasHiddenSplash = React.useRef(false);
 
   const onLayoutRootView = React.useCallback(() => {
@@ -44,8 +52,14 @@ export default function RootLayout() {
     SplashScreen.hide();
   }, []);
 
+  if (fontError)
+    throw fontError;
+  if (!fontsLoaded)
+    return null;
+
   return (
     <Providers onLayout={onLayoutRootView}>
+      <StatusBar style="light" />
       <Stack>
         <Stack.Screen name="(app)" options={{ headerShown: false }} />
       </Stack>
@@ -60,7 +74,7 @@ function Providers({
   children: React.ReactNode;
   onLayout: ViewProps['onLayout'];
 }) {
-  const theme = useThemeConfig();
+  const theme = getAppTheme();
   return (
     <GestureHandlerRootView
       onLayout={onLayout}
@@ -85,5 +99,6 @@ function Providers({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: palette.background,
   },
 });

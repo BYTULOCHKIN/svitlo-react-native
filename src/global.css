@@ -1,17 +1,31 @@
-/* Import Tailwind base styles */
+/* Generated from src/design-system/tokens.ts. Run npm run design:generate. */
 @import 'tailwindcss';
 @import 'uniwind';
 
-/* Define your theme in CSS (replaces tailwind.config.js) */
 @theme {
-  /* Font families */
-  --font-family-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
-
-  /* Base colors */
+  --font-inter: 'Inter_400Regular';
+  --font-sans: 'Inter_400Regular';
+  --spacing: 4px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-xl: 24px;
+  --text-xs: 12px;
+  --text-xs--line-height: 18px;
+  --text-sm: 13px;
+  --text-sm--line-height: 19px;
+  --text-base: 14px;
+  --text-base--line-height: 21px;
+  --text-lg: 16px;
+  --text-lg--line-height: 23px;
+  --text-xl: 18px;
+  --text-xl--line-height: 25px;
+  --text-2xl: 22px;
+  --text-2xl--line-height: 29px;
+  --text-3xl: 32px;
+  --text-3xl--line-height: 40px;
   --color-white: #ffffff;
   --color-black: #000000;
-
-  /* Charcoal palette */
   --color-charcoal-50: #F2F2F2;
   --color-charcoal-100: #E5E5E5;
   --color-charcoal-200: #C9C9C9;
@@ -24,8 +38,6 @@
   --color-charcoal-850: #2E2E2E;
   --color-charcoal-900: #1E1E1E;
   --color-charcoal-950: #121212;
-
-  /* Neutral palette */
   --color-neutral-50: #FAFAFA;
   --color-neutral-100: #F5F5F5;
   --color-neutral-200: #F0EFEE;
@@ -36,20 +48,16 @@
   --color-neutral-700: #404040;
   --color-neutral-800: #262626;
   --color-neutral-900: #171717;
-
-  /* Primary palette */
-  --color-primary-50: #FFE2CC;
-  --color-primary-100: #FFC499;
-  --color-primary-200: #FFA766;
-  --color-primary-300: #FF984C;
-  --color-primary-400: #FF8933;
-  --color-primary-500: #FF7B1A;
-  --color-primary-600: #FF6C00;
-  --color-primary-700: #E56100;
-  --color-primary-800: #CC5600;
-  --color-primary-900: #B24C00;
-
-  /* Success palette */
+  --color-primary-50: #EAFBF1;
+  --color-primary-100: #D0F5DF;
+  --color-primary-200: #A4ECC3;
+  --color-primary-300: #79E2A7;
+  --color-primary-400: #50D98B;
+  --color-primary-500: #2ECC71;
+  --color-primary-600: #24A35A;
+  --color-primary-700: #1B7A44;
+  --color-primary-800: #12522D;
+  --color-primary-900: #092916;
   --color-success-50: #F0FDF4;
   --color-success-100: #DCFCE7;
   --color-success-200: #BBF7D0;
@@ -60,8 +68,6 @@
   --color-success-700: #15803D;
   --color-success-800: #166534;
   --color-success-900: #14532D;
-
-  /* Warning palette */
   --color-warning-50: #FFFBEB;
   --color-warning-100: #FEF3C7;
   --color-warning-200: #FDE68A;
@@ -72,8 +78,6 @@
   --color-warning-700: #B45309;
   --color-warning-800: #92400E;
   --color-warning-900: #78350F;
-
-  /* Danger palette */
   --color-danger-50: #FEF2F2;
   --color-danger-100: #FEE2E2;
   --color-danger-200: #FECACA;
@@ -84,45 +88,15 @@
   --color-danger-700: #B91C1C;
   --color-danger-800: #991B1B;
   --color-danger-900: #7F1D1D;
-
-  /* Semantic colors - using primary for main brand color */
-  --color-background: #ffffff;
-  --color-foreground: #0a0a0a;
-
-  --color-card: #ffffff;
-  --color-card-foreground: #0a0a0a;
-
-  --color-muted: #f5f5f5;
-  --color-muted-foreground: #737373;
-
-  --color-border: #e5e5e5;
-  --color-input: #e5e5e5;
-  --color-ring: #FF6C00;
-
-  --color-destructive: #ef4444;
-  --color-destructive-foreground: #ffffff;
-}
-
-/* Dark mode colors */
-@media (prefers-color-scheme: dark) {
-  @theme {
-    --color-background: #0a0a0a;
-    --color-foreground: #fafafa;
-
-    --color-card: #171717;
-    --color-card-foreground: #fafafa;
-
-    --color-muted: #262626;
-    --color-muted-foreground: #a3a3a3;
-
-    --color-border: #404040;
-    --color-input: #404040;
-  }
-}
-
-/* Custom utilities (if needed) */
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
+  --color-background: #1B1B1B;
+  --color-foreground: #F5F5F5;
+  --color-card: #252525;
+  --color-card-foreground: #F5F5F5;
+  --color-muted: #303030;
+  --color-muted-foreground: #B8B8B8;
+  --color-border: #383838;
+  --color-input: #383838;
+  --color-ring: #2ECC71;
+  --color-destructive: #FF8178;
+  --color-destructive-foreground: #1B1B1B;
 }

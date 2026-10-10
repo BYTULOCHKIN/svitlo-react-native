@@ -9,6 +9,8 @@
   },
   "main": "expo-router/entry",
   "scripts": {
+    "design:generate": "node --require tsx/cjs scripts/generate-design-theme.ts",
+    "design:check": "node --require tsx/cjs scripts/generate-design-theme.ts --check",
     "start": "expo start",
     "prebuild": "pnpm expo prebuild",
     "android": "expo run:android",

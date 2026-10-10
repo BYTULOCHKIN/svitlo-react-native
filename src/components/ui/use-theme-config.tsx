@@ -1,38 +1,20 @@
 import type { Theme } from '@react-navigation/native';
-import {
-  DarkTheme as _DarkTheme,
-  DefaultTheme,
-} from '@react-navigation/native';
-import { useUniwind } from 'uniwind';
-
-import colors from '@/components/ui/colors';
+import { DarkTheme as _DarkTheme } from '@react-navigation/native';
+import { palette } from '@/design-system/tokens';
 
 const DarkTheme: Theme = {
   ..._DarkTheme,
   colors: {
     ..._DarkTheme.colors,
-    primary: colors.primary[200],
-    background: colors.charcoal[950],
-    text: colors.charcoal[100],
-    border: colors.charcoal[500],
-    card: colors.charcoal[850],
+    primary: palette.green,
+    background: palette.background,
+    text: palette.text,
+    border: palette.border,
+    card: palette.card,
+    notification: palette.red,
   },
 };
 
-const LightTheme: Theme = {
-  ...DefaultTheme,
-  colors: {
-    ...DefaultTheme.colors,
-    primary: colors.primary[400],
-    background: colors.white,
-  },
-};
-
-export function useThemeConfig() {
-  const { theme } = useUniwind();
-
-  if (theme === 'dark')
-    return DarkTheme;
-
-  return LightTheme;
+export function getAppTheme() {
+  return DarkTheme;
 }
