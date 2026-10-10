@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LocationSelector } from './components/location-selector';
 import { QueuePicker } from './components/queue-picker';
@@ -23,7 +23,7 @@ export function HomeScreen() {
   const view = getScheduleView(schedule, getMinute(now), query.data?.noOutagesScope === 'region');
   return (
     <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: palette.background }}>
-      <ScrollView contentContainerStyle={{ paddingBottom: 24 }}>
+      <ScrollView refreshControl={<RefreshControl refreshing={query.isFetching && !query.isPending} onRefresh={() => { void query.refresh(); }} tintColor={palette.green} colors={[palette.green]} />} contentContainerStyle={{ paddingBottom: 24, flexGrow: 1 }}>
         <Text style={{ fontSize: 28, color: palette.text, padding: 16 }}>ЄСвітло</Text>
         {!selected
           ? (
@@ -43,9 +43,15 @@ export function HomeScreen() {
                         <ScheduleTimeline view={view} />
                       </>
                     )}
-                {query.error && <Text style={{ padding: 16, color: palette.red }}>{query.error.message}</Text>}
               </>
             )}
+        {query.error && (
+          <View style={{ padding: 16 }}>
+            <Text style={{ color: palette.red }}>{query.data ? 'Не вдалося оновити графік. Показано останні отримані дані.' : 'Не вдалося завантажити графік.'}</Text>
+            <Text style={{ color: palette.secondary, marginTop: 8 }}>{query.error.message}</Text>
+            <Pressable accessibilityRole="button" onPress={() => { void query.refresh(); }} style={{ paddingVertical: 16 }}><Text style={{ color: palette.green }}>Спробувати ще раз</Text></Pressable>
+          </View>
+        )}
       </ScrollView>
       <QueuePicker
         visible={picking}
@@ -53,7 +59,7 @@ export function HomeScreen() {
         loading={query.isPending}
         error={query.error?.message}
         emptyMessage={query.data?.noOutagesScope === 'region' ? 'Відключення не заплановані на сьогодні. Оператор не надав перелік черг. Оновіть дані пізніше, щоб обрати чергу.' : undefined}
-        onRetry={() => { void query.refetch(); }}
+        onRetry={() => { void query.refresh(); }}
         onClose={() => setPicking(false)}
         onChoose={(queue) => {
           chooseFirst(queue);

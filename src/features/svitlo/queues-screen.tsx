@@ -29,8 +29,8 @@ export function QueuesScreen() {
       {query.isPending && <ActivityIndicator color={palette.green} />}
       {query.error && (
         <View style={{ padding: 16 }}>
-          <Text style={{ color: palette.red }}>{query.error.message}</Text>
-          <Pressable accessibilityRole="button" onPress={() => { void query.refetch(); }} style={{ paddingVertical: 16 }}><Text style={{ color: palette.green }}>Спробувати ще раз</Text></Pressable>
+          <Text style={{ color: palette.red }}>{query.data ? 'Не вдалося оновити графік. Показано останні отримані дані.' : query.error.message}</Text>
+          <Pressable accessibilityRole="button" onPress={() => { void query.refresh(); }} style={{ paddingVertical: 16 }}><Text style={{ color: palette.green }}>Спробувати ще раз</Text></Pressable>
         </View>
       )}
       {!query.isPending && !rows.length && <Text style={{ color: palette.secondary, padding: 16 }}>{query.data?.noOutagesScope === 'region' ? 'Відключення не заплановані на сьогодні. Оператор не надав таблицю черг.' : 'Немає даних про графіки.'}</Text>}
