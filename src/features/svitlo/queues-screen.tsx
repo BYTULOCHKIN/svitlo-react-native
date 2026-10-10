@@ -1,6 +1,7 @@
 import type { PowerState } from './models';
 import { ActivityIndicator, Pressable, ScrollView, Text, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { ScheduleFreshness } from './components/schedule-freshness';
 import { useLocations } from './location-store';
 import { toMatrixRows } from './schedule-matrix';
 import { palette, states } from './theme';
@@ -18,6 +19,7 @@ export function QueuesScreen() {
   return (
     <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: palette.background }}>
       <Text style={{ color: palette.text, fontSize: 24, padding: 16 }}>Загальний графік по всіх чергах</Text>
+      <ScheduleFreshness snapshot={query.snapshot} current={!!query.currentDay} fetching={query.isFetching} failed={!!query.error} />
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 16, gap: 12, paddingBottom: 16 }}>
         {(Object.keys(colors) as PowerState[]).map(state => (
           <View key={state} style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
@@ -33,7 +35,7 @@ export function QueuesScreen() {
           <Pressable accessibilityRole="button" onPress={() => { void query.refresh(); }} style={{ paddingVertical: 16 }}><Text style={{ color: palette.green }}>Спробувати ще раз</Text></Pressable>
         </View>
       )}
-      {!query.isPending && !rows.length && <Text style={{ color: palette.secondary, padding: 16 }}>{query.data?.noOutagesScope === 'region' ? 'Відключення не заплановані на сьогодні. Оператор не надав таблицю черг.' : 'Немає даних про графіки.'}</Text>}
+      {!query.isPending && !rows.length && <Text style={{ color: palette.secondary, padding: 16 }}>{query.currentDay?.noOutagesScope === 'region' ? 'Відключення не заплановані на сьогодні. Оператор не надав таблицю черг.' : 'Немає даних про графіки.'}</Text>}
       <ScrollView horizontal style={{ marginHorizontal: 8 }}>
         <ScrollView stickyHeaderIndices={[0]} style={{ width }}>
           <View style={{ flexDirection: 'row', paddingVertical: 4, backgroundColor: palette.background }}>

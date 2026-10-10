@@ -3,6 +3,7 @@ import { ActivityIndicator, Pressable, RefreshControl, ScrollView, Text, View } 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LocationSelector } from './components/location-selector';
 import { QueuePicker } from './components/queue-picker';
+import { ScheduleFreshness } from './components/schedule-freshness';
 import { ScheduleTimeline } from './components/schedule-timeline';
 import { StatusCard } from './components/status-card';
 import { useLocations } from './location-store';
@@ -19,12 +20,13 @@ export function HomeScreen() {
   const query = useSchedule();
   const now = useClock();
   const queues = query.data?.queues.map(schedule => schedule.queue).sort((a, b) => a.localeCompare(b, 'uk', { numeric: true })) ?? [];
-  const schedule = query.data?.queues.find(item => item.queue === selected?.queue);
-  const view = getScheduleView(schedule, getMinute(now), query.data?.noOutagesScope === 'region');
+  const schedule = query.currentDay?.queues.find(item => item.queue === selected?.queue);
+  const view = getScheduleView(schedule, getMinute(now), query.currentDay?.noOutagesScope === 'region');
   return (
     <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: palette.background }}>
       <ScrollView refreshControl={<RefreshControl refreshing={query.isFetching && !query.isPending} onRefresh={() => { void query.refresh(); }} tintColor={palette.green} colors={[palette.green]} />} contentContainerStyle={{ paddingBottom: 24, flexGrow: 1 }}>
         <Text style={{ fontSize: 28, color: palette.text, padding: 16 }}>ЄСвітло</Text>
+        <ScheduleFreshness snapshot={query.snapshot} current={!!query.currentDay} fetching={query.isFetching} failed={!!query.error} />
         {!selected
           ? (
               <View style={{ padding: 24, gap: 16 }}>
@@ -35,7 +37,7 @@ export function HomeScreen() {
           : (
               <>
                 <LocationSelector queues={queues} />
-                {query.isPending
+                {query.isPending && !query.snapshot
                   ? <ActivityIndicator color={palette.green} style={{ height: 200 }} />
                   : (
                       <>
@@ -58,7 +60,7 @@ export function HomeScreen() {
         queues={queues}
         loading={query.isPending}
         error={query.error?.message}
-        emptyMessage={query.data?.noOutagesScope === 'region' ? 'Відключення не заплановані на сьогодні. Оператор не надав перелік черг. Оновіть дані пізніше, щоб обрати чергу.' : undefined}
+        emptyMessage={query.currentDay?.noOutagesScope === 'region' ? 'Відключення не заплановані на сьогодні. Оператор не надав перелік черг. Оновіть дані пізніше, щоб обрати чергу.' : undefined}
         onRetry={() => { void query.refresh(); }}
         onClose={() => setPicking(false)}
         onChoose={(queue) => {
