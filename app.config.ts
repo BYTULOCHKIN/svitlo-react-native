@@ -1,7 +1,5 @@
 import type { ConfigContext, ExpoConfig } from '@expo/config';
 
-import type { AppIconBadgeConfig } from 'app-icon-badge/types';
-
 import 'tsx/cjs';
 
 // adding lint exception as we need to import tsx/cjs before env.ts is imported
@@ -10,22 +8,6 @@ import Env from './env';
 
 const EXPO_ACCOUNT_OWNER = process.env.EXPO_ACCOUNT_OWNER;
 const EAS_PROJECT_ID = process.env.EAS_PROJECT_ID;
-
-const appIconBadgeConfig: AppIconBadgeConfig = {
-  enabled: Env.EXPO_PUBLIC_APP_ENV !== 'production',
-  badges: [
-    {
-      text: Env.EXPO_PUBLIC_APP_ENV,
-      type: 'banner',
-      color: 'white',
-    },
-    {
-      text: Env.EXPO_PUBLIC_VERSION.toString(),
-      type: 'ribbon',
-      color: 'white',
-    },
-  ],
-};
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
@@ -56,7 +38,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   android: {
     adaptiveIcon: {
       foregroundImage: './assets/adaptive-icon.png',
-      backgroundColor: '#2E3C4B',
+      backgroundColor: '#E6E5E5',
     },
     package: Env.EXPO_PUBLIC_PACKAGE,
   },
@@ -68,9 +50,10 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     [
       'expo-splash-screen',
       {
-        backgroundColor: '#2E3C4B',
+        backgroundColor: '#1B1B1B',
         image: './assets/splash-icon.png',
         imageWidth: 150,
+        resizeMode: 'contain',
       },
     ],
     [
@@ -113,7 +96,6 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     ],
     'expo-localization',
     'expo-router',
-    ['app-icon-badge', appIconBadgeConfig],
     ['react-native-edge-to-edge'],
   ],
   extra: {
