@@ -21,8 +21,8 @@ export function StatusCard({ state, view }: { state: PowerState; view?: Schedule
         <Rect width="100%" height="100%" fill="url(#status)" />
       </Svg>
       <View style={{ width: 80, height: 80, alignItems: 'center', justifyContent: 'center' }}><SvitloIcon name="bulb" size={64} color={theme.color} /></View>
-      <Text style={{ color: theme.color, fontSize: 32, fontWeight: 'bold', textAlign: 'center', marginTop: 16 }}>{theme.title}</Text>
-      <Text style={{ color: '#FFFFFF99', fontSize: 14, textAlign: 'center', marginTop: 8 }}>{view?.next ? `Наступна подія: ${formatMinute(view.next.start)} — ${eventLabel(view.next.state)}` : 'Наступна подія невідома'}</Text>
+      <Text style={{ color: theme.color, fontSize: 32, fontWeight: 'bold', textAlign: 'center', marginTop: 16 }}>{view?.noOutagesPlanned ? 'Відключення не заплановані на сьогодні' : theme.title}</Text>
+      <Text style={{ color: '#FFFFFF99', fontSize: 14, textAlign: 'center', marginTop: 8 }}>{view?.noOutagesPlanned ? 'За графіком оператора на весь день' : view?.next ? `Наступна подія: ${formatMinute(view.next.start)} — ${eventLabel(view.next.state)}` : 'Наступна подія невідома'}</Text>
       {view?.remainingSeconds != null && (
         <View style={{ width: '100%', backgroundColor: '#00000033', borderRadius: 24, padding: 16, marginTop: 32, alignItems: 'center' }}>
           <Text style={{ color: theme.color, fontSize: 11, letterSpacing: 2, marginBottom: 12 }}>ЗАЛИШИЛОСЬ</Text>

@@ -1,4 +1,5 @@
 import liveResponse from './fixtures/poe-2026-10-10.json';
+import noOutagesResponse from './fixtures/poe-no-outages-2026-10-01.json';
 import { getCurrentState } from './models';
 import { parsePoeHtml } from './poe-parser';
 
@@ -7,6 +8,12 @@ function table(slots: string[]) {
 }
 
 describe('полтаваобленерго', () => {
+  it('recognizes the captured region-wide confirmation only for its date and scope', () => {
+    expect(parsePoeHtml(noOutagesResponse.html, noOutagesResponse.date)).toEqual({ date: noOutagesResponse.date, queues: [], noOutagesScope: 'region' });
+    expect(() => parsePoeHtml(noOutagesResponse.html, '2026-10-02')).toThrow();
+    expect(() => parsePoeHtml(noOutagesResponse.html.replace('у Полтавській області', 'для окремої черги'), noOutagesResponse.date)).toThrow();
+    expect(() => parsePoeHtml(noOutagesResponse.html.replace('не прогнозується', 'прогнозується'), noOutagesResponse.date)).toThrow();
+  });
   it('parses a captured live response into all twelve subqueues', () => {
     const day = parsePoeHtml(liveResponse.html, liveResponse.date);
     expect(day.queues).toHaveLength(12);

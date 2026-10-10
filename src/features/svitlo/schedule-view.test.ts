@@ -1,5 +1,5 @@
 import type { QueueSchedule } from './models';
-import { countdownParts, eventLabel, getScheduleView } from './schedule-view';
+import { countdownParts, eventLabel, getScheduleView, hasNoPlannedOutages } from './schedule-view';
 
 const schedule: QueueSchedule = { queue: '1.1', intervals: [
   { start: 0, end: 630, state: 'on' },
@@ -8,6 +8,20 @@ const schedule: QueueSchedule = { queue: '1.1', intervals: [
 ] };
 
 describe('local schedule clock', () => {
+  it('confirms a full day with power and rejects incomplete or uncertain data', () => {
+    const full: QueueSchedule = { queue: '1.1', intervals: [{ start: 0, end: 1440, state: 'on' }] };
+    expect(hasNoPlannedOutages(full)).toBe(true);
+    expect(hasNoPlannedOutages(undefined)).toBe(false);
+    expect(hasNoPlannedOutages({ ...full, intervals: [] })).toBe(false);
+    expect(hasNoPlannedOutages({ ...full, intervals: [{ start: 0, end: 1410, state: 'on' }] })).toBe(false);
+    expect(hasNoPlannedOutages({ ...full, intervals: [{ start: 30, end: 1440, state: 'on' }] })).toBe(false);
+    expect(hasNoPlannedOutages({ ...full, intervals: [{ start: 0, end: 1440, state: 'unknown' }] })).toBe(false);
+    expect(hasNoPlannedOutages(schedule)).toBe(false);
+    const view = getScheduleView(undefined, 600, true);
+    expect(view.noOutagesPlanned).toBe(true);
+    expect(view.state).toBe('on');
+    expect(view.remainingSeconds).toBeNull();
+  });
   it('counts down to a possible outage without claiming a guaranteed outage', () => {
     const view = getScheduleView(schedule, 629.5);
     expect(view.remainingSeconds).toBe(30);

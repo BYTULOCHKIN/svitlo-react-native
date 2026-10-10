@@ -54,7 +54,10 @@ function text(node: Node): string {
 }
 
 export function parsePoeHtml(html: string, date: string): ScheduleDay {
-  const table = elements(parseFragment(html), 'table').find(node => attr(node, 'class').split(/\s+/).includes('turnoff-scheduleui-table'));
+  const root = parseFragment(html);
+  const table = elements(root, 'table').find(node => attr(node, 'class').split(/\s+/).includes('turnoff-scheduleui-table'));
+  if (!table && confirmsNoOutages(root, date))
+    return { date, queues: [], noOutagesScope: 'region' };
   const queues: QueueSchedule[] = [];
   let currentQueue = '';
   for (const row of table ? elements(table, 'tbody').flatMap(body => elements(body, 'tr')) : []) {
@@ -72,4 +75,11 @@ export function parsePoeHtml(html: string, date: string): ScheduleDay {
   if (new Set(queues.map(queue => queue.queue)).size !== queues.length)
     throw new Error('Дубльовані черги у відповіді');
   return { date, queues };
+}
+
+function confirmsNoOutages(root: Node, date: string) {
+  const months = ['січня', 'лютого', 'березня', 'квітня', 'травня', 'червня', 'липня', 'серпня', 'вересня', 'жовтня', 'листопада', 'грудня'];
+  const [year, month, day] = date.split('-').map(Number);
+  const expected = `На ${day} ${months[month - 1]} ${year} року застосування графіка погодинного відключення електроенергії у Полтавській області не прогнозується.`;
+  return elements(root, 'div').some(node => attr(node, 'class').split(/\s+/).includes('gpvinfodetail') && text(node).replace(/\s+/g, ' ').trim().startsWith(expected));
 }

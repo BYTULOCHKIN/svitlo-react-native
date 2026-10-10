@@ -3,11 +3,25 @@ import { getCurrentState } from './models';
 
 export type ScheduleView = ReturnType<typeof getScheduleView>;
 
-export function getScheduleView(schedule: QueueSchedule | undefined, minute: number) {
+export function hasNoPlannedOutages(schedule: QueueSchedule | undefined) {
+  const intervals = schedule?.intervals ?? [];
+  let end = 0;
+  for (const interval of intervals) {
+    if (interval.state !== 'on' || interval.start !== end || interval.end <= end || interval.end > 1440)
+      return false;
+    end = interval.end;
+  }
+  return end === 1440;
+}
+
+export function getScheduleView(schedule: QueueSchedule | undefined, minute: number, regionNoOutages = false) {
+  if (regionNoOutages)
+    schedule = { queue: schedule?.queue ?? '', intervals: [{ start: 0, end: 1440, state: 'on' }] };
   const intervals = schedule?.intervals ?? [];
   const current = intervals.find(interval => minute >= interval.start && minute < interval.end);
   const next = findNextEvent(current, intervals);
   return {
+    noOutagesPlanned: hasNoPlannedOutages(schedule),
     state: getCurrentState(schedule, minute),
     next,
     remainingSeconds: next ? Math.max(0, Math.round(next.start * 60 - minute * 60)) : null,

@@ -20,7 +20,7 @@ export function HomeScreen() {
   const now = useClock();
   const queues = query.data?.queues.map(schedule => schedule.queue).sort((a, b) => a.localeCompare(b, 'uk', { numeric: true })) ?? [];
   const schedule = query.data?.queues.find(item => item.queue === selected?.queue);
-  const view = getScheduleView(schedule, getMinute(now));
+  const view = getScheduleView(schedule, getMinute(now), query.data?.noOutagesScope === 'region');
   return (
     <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: palette.background }}>
       <ScrollView contentContainerStyle={{ paddingBottom: 24 }}>
@@ -52,6 +52,7 @@ export function HomeScreen() {
         queues={queues}
         loading={query.isPending}
         error={query.error?.message}
+        emptyMessage={query.data?.noOutagesScope === 'region' ? 'Відключення не заплановані на сьогодні. Оператор не надав перелік черг. Оновіть дані пізніше, щоб обрати чергу.' : undefined}
         onRetry={() => { void query.refetch(); }}
         onClose={() => setPicking(false)}
         onChoose={(queue) => {

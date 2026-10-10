@@ -1,7 +1,7 @@
 export type PowerState = 'on' | 'off' | 'possible' | 'unknown';
 export type Interval = { start: number; end: number; state: PowerState };
 export type QueueSchedule = { queue: string; intervals: Interval[] };
-export type ScheduleDay = { date: string; queues: QueueSchedule[] };
+export type ScheduleDay = { date: string; queues: QueueSchedule[]; noOutagesScope?: 'region' };
 export type LocationIcon = 'home' | 'work' | 'school' | 'shop' | 'gym' | 'parents' | 'cafe' | 'heart';
 export type Location = { id: string; name: string; queue: string; icon: LocationIcon };
 
