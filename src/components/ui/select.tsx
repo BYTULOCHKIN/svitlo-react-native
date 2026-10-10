@@ -1,7 +1,7 @@
 /* eslint-disable better-tailwindcss/no-unknown-classes */
 import type { BottomSheetModal } from '@gorhom/bottom-sheet';
+import type { LucideProps } from 'lucide-react-native';
 import type { PressableProps } from 'react-native';
-import type { SvgProps } from 'react-native-svg';
 import {
   BottomSheetFlatList,
 
@@ -9,13 +9,13 @@ import {
 import { FlashList } from '@shopify/flash-list';
 import * as React from 'react';
 import { Platform, Pressable, View } from 'react-native';
-import Svg, { Path } from 'react-native-svg';
 import { tv } from 'tailwind-variants';
-
 import { useUniwind } from 'uniwind';
-import colors from '@/components/ui/colors';
 
+import colors from '@/components/ui/colors';
 import { CaretDown } from '@/components/ui/icons';
+
+import { AppIcon } from '@/design-system/icon';
 import { Modal, useModal } from './modal';
 import { Text } from './text';
 
@@ -218,22 +218,6 @@ export function Select(props: SelectProps) {
   );
 }
 
-function Check({ ...props }: SvgProps) {
-  return (
-    <Svg
-      width={25}
-      height={24}
-      fill="none"
-      viewBox="0 0 25 24"
-      {...props}
-      className="stroke-black dark:stroke-white"
-    >
-      <Path
-        d="m20.256 6.75-10.5 10.5L4.506 12"
-        strokeWidth={2.438}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </Svg>
-  );
+function Check(props: LucideProps) {
+  return <AppIcon name="check" {...props} />;
 }

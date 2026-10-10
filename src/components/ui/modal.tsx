@@ -37,7 +37,7 @@ import { BottomSheetModal, useBottomSheet } from '@gorhom/bottom-sheet';
 import * as React from 'react';
 import { Pressable, View } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
-import { Path, Svg } from 'react-native-svg';
+import { AppIcon } from '@/design-system/icon';
 
 import { Text } from './text';
 
@@ -174,15 +174,7 @@ function CloseButton({ close }: { close: () => void }) {
       accessibilityRole="button"
       accessibilityHint="closes the modal"
     >
-      <Svg
-        className="fill-neutral-300 dark:fill-white"
-        width={24}
-        height={24}
-        fill="none"
-        viewBox="0 0 24 24"
-      >
-        <Path d="M18.707 6.707a1 1 0 0 0-1.414-1.414L12 10.586 6.707 5.293a1 1 0 0 0-1.414 1.414L10.586 12l-5.293 5.293a1 1 0 1 0 1.414 1.414L12 13.414l5.293 5.293a1 1 0 0 0 1.414-1.414L13.414 12l5.293-5.293Z" />
-      </Svg>
+      <AppIcon name="close" />
     </Pressable>
   );
 }
