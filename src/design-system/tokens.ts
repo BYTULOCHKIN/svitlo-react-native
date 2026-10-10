@@ -39,8 +39,15 @@ export const statusCardColors = {
   possible: { color: '#FFA726', gradient: ['#49321B', '#24190D'] as [string, string] },
   unknown: { color: '#B0B0B0', gradient: ['#333333', '#1E1E1E'] as [string, string] },
 };
+// ScheduleTimeline.kt surfaces, extended with possible and unknown states.
+export const timelineColors = {
+  on: { color: '#2ECC71', surface: '#1E844966', border: '#2ECC7199', badge: '#2ECC7133' },
+  off: { color: '#E74C3C', surface: '#922B2166', border: '#E74C3C99', badge: '#E74C3C33' },
+  possible: { color: '#FFC166', surface: '#8A651B66', border: '#FFC16699', badge: '#FFC16633' },
+  unknown: { color: '#B0B0B0', surface: '#33333366', border: '#B0B0B099', badge: '#B0B0B033' },
+};
 export const space = { none: 0, xxs: 2, xs: 4, sm: 8, md: 12, lg: 16, xl: 20, xxl: 24, xxxl: 32 };
-export const radius = { small: 8, control: 12, card: 20, dialog: 24, hero: 32, pill: 999 };
+export const radius = { small: 8, control: 12, timeline: 16, card: 20, dialog: 24, hero: 32, pill: 999 };
 export const fontSize = { micro: 10, caption: 12, label: 13, body: 14, emphasis: 16, section: 18, title: 22, display: 28, timer: 32 };
 export const fonts = { regular: 'Inter_400Regular', medium: 'Inter_500Medium', semibold: 'Inter_600SemiBold', bold: 'Inter_700Bold', monospaceAndroid: 'monospace', monospaceIOS: 'Menlo' };
 export const typography = {
@@ -55,6 +62,8 @@ export const typography = {
   heroTimer: { fontWeight: 'bold', fontSize: fontSize.display, lineHeight: 32, fontVariant: ['tabular-nums'] },
   timerUnit: { fontFamily: fonts.regular, fontSize: fontSize.micro, lineHeight: 14 },
   timerLabel: { fontFamily: fonts.medium, fontSize: 11, lineHeight: 16, letterSpacing: 2 },
+  timelineCountdown: { fontFamily: fonts.bold, fontSize: fontSize.emphasis, lineHeight: 23 },
+  timelineBadge: { fontFamily: fonts.bold, fontSize: 11, lineHeight: 16 },
 } satisfies Record<string, TextStyle>;
 export const metrics = {
   hairline: 1,
@@ -66,6 +75,11 @@ export const metrics = {
   compactHeroIcon: 28,
   statusCardHeight: 207,
   statusCardShortHeight: 118,
+  timelineRowHeight: 70,
+  timelineCurrentHeight: 110,
+  timelineGap: 6,
+  timelineBorder: 2,
+  timelineIcon: 24,
   iconContainer: 44,
   touchTarget: 48,
   loadingHeight: 120,
