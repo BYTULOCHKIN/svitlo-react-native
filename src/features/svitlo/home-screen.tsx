@@ -26,7 +26,7 @@ export function HomeScreen() {
   const view = getScheduleView(schedule, getMinute(now), query.currentDay?.noOutagesScope === 'region');
   return (
     <SafeAreaView edges={['top']} style={styles.screen}>
-      <ScrollView refreshControl={<RefreshControl refreshing={query.isFetching && !query.isPending} onRefresh={() => { void query.refresh(); }} tintColor={palette.green} colors={[palette.green]} />} contentContainerStyle={styles.page}>
+      <ScrollView keyboardShouldPersistTaps="handled" refreshControl={<RefreshControl refreshing={query.isFetching && !query.isPending} onRefresh={() => { void query.refresh(); }} tintColor={palette.green} colors={[palette.green]} />} contentContainerStyle={styles.page}>
         <View style={styles.header}>
           <Text accessibilityRole="header" style={typography.title}>ЄСвітло</Text>
           <Text style={styles.date}>{now.toLocaleDateString('uk-UA', { timeZone: 'Europe/Kyiv', day: 'numeric', month: 'long' })}</Text>

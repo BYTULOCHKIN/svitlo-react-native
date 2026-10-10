@@ -1,0 +1,40 @@
+appId: ${APP_ID}
+---
+- launchApp
+- openLink: ${DEV_URL}
+- extendedWaitUntil:
+    visible: ЄСвітло
+    timeout: 60000
+- openLink: ${RESET_URL}
+- extendedWaitUntil:
+    visible: Світло за вашою адресою
+    timeout: 10000
+- tapOn: Обрати чергу
+- tapOn: Черга 1.1
+- tapOn: 'Обрати локацію: Дім, черга 1.1'
+- tapOn: Додати локацію
+- tapOn: Назва локації
+- inputText: Draft
+- hideKeyboard
+- tapOn: Скасувати
+- assertVisible: Відкинути незбережені зміни?
+- tapOn: Продовжити редагування
+- assertVisible: Draft
+# Resume restores input focus and opens the keyboard. One tap must close.
+- tapOn: Закрити діалог
+- assertVisible: Відкинути незбережені зміни?
+- tapOn: Відкинути зміни
+- assertVisible: 'Обрати локацію: Дім, черга 1.1'
+- tapOn: 'Обрати локацію: Дім, черга 1.1'
+- tapOn: Додати локацію
+- tapOn: Черга 1.2
+- tapOn: Назва локації
+- inputText: Keyboard
+- takeScreenshot: keyboard-open-form
+- scrollUntilVisible:
+    element: Зберегти
+    direction: DOWN
+    timeout: 15000
+# Save must work on the first tap with the keyboard still open.
+- tapOn: Зберегти
+- assertVisible: 'Обрати локацію: Keyboard, черга 1.2'

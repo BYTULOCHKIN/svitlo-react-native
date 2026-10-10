@@ -11,12 +11,12 @@ module.exports = {
     '!**/docs/**',
     '!**/cli/**',
   ],
-  moduleFileExtensions: ['js', 'mjs', 'ts', 'tsx'],
+  moduleFileExtensions: ['js', 'jsx', 'mjs', 'ts', 'tsx'],
   transform: {
     '\\.mjs$': ['babel-jest', { caller: { name: 'metro', bundler: 'metro', platform: 'ios' } }],
   },
   transformIgnorePatterns: [
-    `node_modules/(?!(?:.pnpm/)?((jest-)?react-native|@react-native(-community)?|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@unimodules/.*|unimodules|@sentry/.*|native-base|react-native-svg|lucide-react-native|@gorhom/.*|@shopify/.*|@tanstack/.*|react-native-reanimated|react-native-mmkv|react-native-nitro-modules|react-native-worklets|moti|zustand|tailwind-merge|tailwind-variants|uniwind))`,
+    `node_modules/(?!(?:.pnpm/)?((jest-)?react-native|@react-native(-community)?|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@unimodules/.*|unimodules|@sentry/.*|native-base|react-native-svg|lucide-react-native|@gorhom/.*|@gluestack-ui/.*|@react-aria/.*|@react-stately/.*|@react-types/.*|react-aria|react-stately|@shopify/.*|@tanstack/.*|react-native-reanimated|react-native-mmkv|react-native-nitro-modules|react-native-worklets|moti|zustand|tailwind-merge|tailwind-variants|uniwind))`,
   ],
   coverageReporters: ['json-summary', ['text', { file: 'coverage.txt' }]],
   reporters: [

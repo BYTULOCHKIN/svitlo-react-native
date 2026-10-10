@@ -1,6 +1,7 @@
 import { createMMKV } from 'react-native-mmkv';
+import { isE2E, useE2EFixtures } from './e2e';
 
-export const storage = createMMKV();
+export const storage = createMMKV(isE2E ? { id: useE2EFixtures ? 'svitlo.e2e.fixtures' : 'svitlo.e2e' } : undefined);
 
 export function getItem<T>(key: string): T | null {
   const value = storage.getString(key);

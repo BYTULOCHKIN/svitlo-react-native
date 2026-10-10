@@ -1,0 +1,56 @@
+appId: ${APP_ID}
+---
+- evalScript: ${output.queues = API_QUEUES.split(',')}
+- assertTrue: ${output.queues.length > 0}
+- launchApp
+- openLink: ${DEV_URL}
+- extendedWaitUntil:
+    visible: ЄСвітло
+    timeout: 60000
+- openLink: ${RESET_URL}
+- extendedWaitUntil:
+    visible: Світло за вашою адресою
+    timeout: 10000
+- tapOn: Обрати чергу
+- evalScript: ${output.index = 0}
+- repeat:
+    times: ${output.queues.length}
+    commands:
+      - scrollUntilVisible:
+          element:
+            text: ${'Черга ' + output.queues[output.index]}
+          direction: DOWN
+          timeout: 15000
+      - assertVisible: ${'Черга ' + output.queues[output.index]}
+      - evalScript: ${output.index = output.index + 1}
+- tapOn: ${'Черга ' + output.queues[output.queues.length - 1]}
+- tapOn: "${'Обрати локацію: Дім, черга ' + output.queues[output.queues.length - 1]}"
+- tapOn: Додати локацію
+- assertVisible: Нова локація
+- tapOn: Назва локації
+- inputText: ApiOffice
+- hideKeyboard
+- evalScript: ${output.index = 0}
+- repeat:
+    times: ${output.queues.length}
+    commands:
+      - scrollUntilVisible:
+          element:
+            text: ${'Черга ' + output.queues[output.index]}
+          direction: DOWN
+          timeout: 15000
+      - assertVisible: ${'Черга ' + output.queues[output.index]}
+      - evalScript: ${output.index = output.index + 1}
+- tapOn: ${'Черга ' + output.queues[output.queues.length - 1]}
+- takeScreenshot: api-queues-form
+- scrollUntilVisible:
+    element: Зберегти
+    direction: DOWN
+    timeout: 15000
+- tapOn: Зберегти
+- assertVisible: "${'Обрати локацію: ApiOffice, черга ' + output.queues[output.queues.length - 1]}"
+- stopApp
+- openLink: ${DEV_URL}
+- extendedWaitUntil:
+    visible: "${'Обрати локацію: ApiOffice, черга ' + output.queues[output.queues.length - 1]}"
+    timeout: 60000

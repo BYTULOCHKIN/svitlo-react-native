@@ -101,7 +101,7 @@ export const metrics = {
   splashWidth: 150,
   splashFadeDuration: 500,
 };
-export const motion = { pressedOpacity: 0.72 };
+export const motion = { pressedOpacity: 0.86, disabledOpacity: 0.72 };
 
 // Compatibility scales for shared UI; CSS is generated from these values.
 export const colorScales = {

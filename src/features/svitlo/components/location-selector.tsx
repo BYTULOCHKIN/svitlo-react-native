@@ -6,6 +6,7 @@ import { AppPressable as Pressable } from '@/design-system/pressable';
 import { AppText as Text } from '@/design-system/text';
 import { metrics, motion, palette, radius, space, typography } from '@/design-system/tokens';
 import { useLocations } from '../location-store';
+import { AddLocationDialog } from './add-location-dialog';
 import { LocationDialog } from './location-dialog';
 import { SvitloIcon } from './svitlo-icon';
 
@@ -76,7 +77,8 @@ export function LocationSelector({ queues }: { queues: string[] }) {
           </View>
         </SafeAreaView>
       </Modal>
-      {editing !== undefined && <LocationDialog location={editing ?? undefined} queues={queues} onClose={() => setEditing(undefined)} />}
+      {editing === null && <AddLocationDialog queues={queues} onClose={() => setEditing(undefined)} />}
+      {editing && <LocationDialog location={editing} queues={queues} onClose={() => setEditing(undefined)} />}
     </>
   );
 }

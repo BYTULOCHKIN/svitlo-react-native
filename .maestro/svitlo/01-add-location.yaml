@@ -1,0 +1,94 @@
+appId: ${APP_ID}
+---
+- launchApp
+- openLink: ${DEV_URL}
+- extendedWaitUntil:
+    visible: ЄСвітло
+    timeout: 60000
+- openLink: ${RESET_URL}
+- extendedWaitUntil:
+    visible: Світло за вашою адресою
+    timeout: 10000
+- tapOn: Обрати чергу
+- tapOn: Черга 1.1
+- tapOn: 'Обрати локацію: Дім, черга 1.1'
+- tapOn: Додати локацію
+- assertVisible: Нова локація
+- assertVisible:
+    text: Зберегти
+    enabled: false
+- assertVisible: Нова локація
+- tapOn: Назва локації
+- inputText: Office
+- hideKeyboard
+- tapOn: 'Іконка: Робота'
+- tapOn: Черга 1.2
+- tapOn: Зберегти
+- assertVisible: 'Обрати локацію: Office, черга 1.2'
+- assertNotVisible: Нова локація
+- stopApp
+- openLink: ${DEV_URL}
+- extendedWaitUntil:
+    visible: 'Обрати локацію: Office, черга 1.2'
+    timeout: 60000
+- tapOn: 'Обрати локацію: Office, черга 1.2'
+- tapOn: Редагувати Дім
+- assertVisible: Редагувати локацію
+- tapOn: Назва локації
+- eraseText
+- inputText: ' Apartment '
+- hideKeyboard
+- tapOn: 'Іконка: Кохані'
+- tapOn: Черга 2.1
+- tapOn: Зберегти
+- assertVisible: 'Обрати локацію: Office, черга 1.2'
+- stopApp
+- openLink: ${DEV_URL}
+- extendedWaitUntil:
+    visible: 'Обрати локацію: Office, черга 1.2'
+    timeout: 60000
+- tapOn: 'Обрати локацію: Office, черга 1.2'
+- tapOn: Редагувати Apartment
+- assertVisible: Apartment
+- assertVisible: Черга 2.1
+- tapOn: Назва локації
+- eraseText
+- inputText: Draft
+- hideKeyboard
+- tapOn: Скасувати
+- assertVisible: Відкинути незбережені зміни?
+- tapOn: Продовжити редагування
+- assertVisible: Draft
+- tapOn: Закрити діалог
+- tapOn: Відкинути зміни
+- tapOn: 'Обрати локацію: Office, черга 1.2'
+- tapOn: Редагувати Apartment
+- assertVisible: Apartment
+- tapOn: Видалити локацію
+- assertVisible: Локацію «Apartment» буде видалено.
+- tapOn: Скасувати
+- assertVisible: Редагувати локацію
+- scrollUntilVisible:
+    element: Видалити локацію
+    direction: DOWN
+    timeout: 15000
+- tapOn: Видалити локацію
+- tapOn: Видалити
+- assertVisible: 'Обрати локацію: Office, черга 1.2'
+- stopApp
+- openLink: ${DEV_URL}
+- extendedWaitUntil:
+    visible: 'Обрати локацію: Office, черга 1.2'
+    timeout: 60000
+- tapOn: 'Обрати локацію: Office, черга 1.2'
+- assertNotVisible: Редагувати Apartment
+- tapOn: Редагувати Office
+- tapOn: Видалити локацію
+- assertVisible: Локацію «Office» буде видалено.
+- tapOn: Видалити
+- assertVisible: Світло за вашою адресою
+- stopApp
+- openLink: ${DEV_URL}
+- extendedWaitUntil:
+    visible: Світло за вашою адресою
+    timeout: 60000

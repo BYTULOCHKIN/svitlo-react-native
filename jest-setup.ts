@@ -101,3 +101,6 @@ global.window = {};
 
 // @ts-expect-error
 global.window = global;
+
+// React Aria reads browser screen capabilities even when its native hooks are used.
+Object.defineProperty(global.window, 'screen', { value: {}, configurable: true });

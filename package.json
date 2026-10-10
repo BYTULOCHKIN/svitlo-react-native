@@ -11,7 +11,10 @@
   "scripts": {
     "design:generate": "node --require tsx/cjs scripts/generate-design-theme.ts",
     "design:check": "node --require tsx/cjs scripts/generate-design-theme.ts --check",
+    "design:contrast": "node --require tsx/cjs scripts/check-component-contrast.ts",
     "start": "expo start",
+    "start:e2e": "cross-env EXPO_PUBLIC_APP_ENV=development EXPO_PUBLIC_E2E=1 EXPO_PUBLIC_E2E_FIXTURES=0 expo start --dev-client --port 8082 --localhost",
+    "start:e2e:fixtures": "cross-env EXPO_PUBLIC_APP_ENV=development EXPO_PUBLIC_E2E=1 EXPO_PUBLIC_E2E_FIXTURES=1 expo start --dev-client --port 8082 --localhost",
     "prebuild": "pnpm expo prebuild",
     "android": "expo run:android",
     "ios": "expo run:ios",
@@ -41,15 +44,18 @@
     "type-check": "tsc --noemit",
     "lint:translations": "eslint ./src/translations/ --fix --ext .json",
     "test": "jest",
-    "check-all": "pnpm run lint && pnpm run type-check && pnpm run lint:translations && pnpm run test",
+    "check-all": "pnpm run lint && pnpm run type-check && pnpm run design:check && pnpm run design:contrast && pnpm run lint:translations && pnpm run test",
     "test:ci": "pnpm run test --coverage",
     "test:watch": "pnpm run test --watch",
     "install-maestro": "curl -Ls 'https://get.maestro.mobile.dev' | bash",
-    "e2e-test": "maestro test .maestro/ -e APP_ID=com.obytes.development"
+    "e2e-test": "maestro test .maestro/ -e APP_ID=com.obytes.development",
+    "test:e2e:svitlo": "maestro test .maestro/svitlo/ -e APP_ID=ua.svitlo.rn.development -e DEV_URL=svitlo-rn-development://expo-development-client/?url=http%3A%2F%2F127.0.0.1%3A8082 -e RESET_URL=svitlo-rn-development://e2e-reset"
   },
   "dependencies": {
     "@expo-google-fonts/inter": "^0.4.2",
     "@expo/metro-runtime": "^6.1.2",
+    "@gluestack-ui/core": "5.0.15",
+    "@gluestack-ui/utils": "5.0.6",
     "@gorhom/bottom-sheet": "^5.2.8",
     "@shopify/flash-list": "2.0.2",
     "@tanstack/react-form": "^1.27.7",
