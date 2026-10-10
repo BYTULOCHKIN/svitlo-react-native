@@ -1,21 +1,27 @@
 import type { PowerState } from '../models';
 import type { ScheduleView } from '../schedule-view';
-import { StyleSheet, useWindowDimensions, View } from 'react-native';
+import { Fragment } from 'react';
+import { Platform, StyleSheet, useWindowDimensions, View } from 'react-native';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 import { AppText as Text } from '@/design-system/text';
-import { metrics, palette, radius, space, typography } from '@/design-system/tokens';
+import { fonts, metrics, palette, radius, space, statusCardColors, typography } from '@/design-system/tokens';
 import { formatMinute } from '../models';
 import { countdownParts, eventLabel } from '../schedule-view';
 import { states } from '../theme';
 import { SvitloIcon } from './svitlo-icon';
 
-export function StatusCard({ state, view }: { state: PowerState; view?: ScheduleView }) {
-  const theme = states[state];
+export function StatusCard({ state, view, updatedAt }: { state: PowerState; view?: ScheduleView; updatedAt?: number }) {
+  const theme = statusCardColors[state];
   const { width, fontScale } = useWindowDimensions();
-  const stacked = width < metrics.timerStackWidth || fontScale > metrics.timerStackFontScale;
-  const nextLabel = view?.next ? eventLabel(view.next.state) : 'Наступна подія невідома';
+  const largeText = fontScale > metrics.timerStackFontScale;
+  const inlineTimestamp = width < metrics.timerStackWidth || largeText;
+  const title = view?.noOutagesPlanned ? 'Світло на весь день' : state === 'on' ? 'Світло Є!' : states[state].title;
+  const nextLabel = view?.noOutagesPlanned
+    ? 'Відключення не заплановані на сьогодні'
+    : view?.next ? `${eventLabel(view.next.state)} · ${formatMinute(view.next.start)}` : 'Наступна подія невідома';
+  const updated = updatedAt != null ? new Date(updatedAt) : undefined;
   return (
-    <View style={[styles.card, { borderColor: theme.border }]}>
+    <View style={[styles.card, { minHeight: view?.remainingSeconds != null ? metrics.statusCardHeight : metrics.statusCardShortHeight }]}>
       <Svg pointerEvents="none" style={StyleSheet.absoluteFill} width="100%" height="100%">
         <Defs>
           <LinearGradient id="status" x1="0" y1="0" x2="1" y2="1">
@@ -27,48 +33,61 @@ export function StatusCard({ state, view }: { state: PowerState; view?: Schedule
       </Svg>
       <View style={styles.content}>
         <View style={styles.heading}>
-          <View style={[styles.icon, { backgroundColor: theme.surface }]}><SvitloIcon name="bulb" size={metrics.heroIcon} color={theme.color} /></View>
-          <View style={styles.headingText}>
-            <Text style={[typography.caption, { color: theme.color }]}>ЗАРАЗ · ЗА ГРАФІКОМ</Text>
-            <Text style={typography.title}>{view?.noOutagesPlanned ? 'Світло на весь день' : theme.title}</Text>
-          </View>
+          {updated && (
+            <Text
+              accessibilityLabel={`Останнє оновлення графіка: ${updated.toLocaleString('uk-UA', { timeZone: 'Europe/Kyiv', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })}, Київ`}
+              style={[typography.caption, styles.updated, !inlineTimestamp && styles.cornerTimestamp]}
+            >
+              {`Оновлено ${updated.toLocaleTimeString('uk-UA', { timeZone: 'Europe/Kyiv', hour: '2-digit', minute: '2-digit' })}`}
+            </Text>
+          )}
+          <SvitloIcon name="bulb" size={metrics.compactHeroIcon} color={theme.color} opacity={state === 'off' ? 0.6 : 1} />
         </View>
-        {view?.remainingSeconds != null
-          ? (
-              <View style={[styles.countdown, { borderColor: theme.border }]}>
-                <View style={[styles.event, stacked && styles.stacked]}>
-                  <Text style={[typography.label, styles.eventLabel]}>{nextLabel}</Text>
-                  {view.next && <Text style={[typography.emphasis, { color: theme.color }]}>{formatMinute(view.next.start)}</Text>}
-                </View>
-                <View accessible accessibilityLabel={`Залишилось ${countdownParts(view.remainingSeconds).join(':')}`} style={[styles.digits, fontScale > metrics.timerStackFontScale && styles.largeDigits]}>
-                  {countdownParts(view.remainingSeconds).map((part, index) => (
-                    <View key={['hours', 'minutes', 'seconds'][index]} style={[styles.digit, fontScale > metrics.timerStackFontScale && styles.largeDigit]}>
-                      <Text style={[typography.timer, { color: theme.color, textAlign: 'center' }]}>{part}</Text>
-                      <Text style={[typography.caption, { color: palette.secondary, textAlign: 'center' }]}>{['год', 'хв', 'сек'][index]}</Text>
-                    </View>
-                  ))}
-                </View>
-              </View>
-            )
-          : <Text style={[typography.body, styles.description]}>{view?.noOutagesPlanned ? 'Відключення не заплановані на сьогодні' : nextLabel}</Text>}
+        <Text style={[typography.heroTitle, styles.centered, { color: theme.color }]}>{title}</Text>
+        <View style={styles.event}>
+          <SvitloIcon name={state === 'on' ? 'zapOff' : 'zap'} size={metrics.iconSmall} color={palette.heroSecondary} />
+          <Text style={[typography.label, styles.description]}>{nextLabel}</Text>
+        </View>
+        {view?.remainingSeconds != null && <Countdown seconds={view.remainingSeconds} color={theme.color} stacked={largeText} />}
+      </View>
+    </View>
+  );
+}
+
+function Countdown({ seconds, color, stacked }: { seconds: number; color: string; stacked: boolean }) {
+  return (
+    <View style={styles.countdown}>
+      <Text style={[typography.timerLabel, styles.centered, { color, opacity: 0.7 }]}>ЗАЛИШИЛОСЬ</Text>
+      <View accessible accessibilityLabel={`Залишилось ${countdownParts(seconds).join(':')}`} style={[styles.digits, stacked && styles.largeDigits]}>
+        {countdownParts(seconds).map((part, index) => (
+          <Fragment key={['hours', 'minutes', 'seconds'][index]}>
+            {index > 0 && !stacked && <Text style={[typography.heroTitle, styles.separator, { color }]}>:</Text>}
+            <View style={[styles.digit, stacked && styles.largeDigit]}>
+              <Text style={[typography.heroTimer, styles.number, { color }]}>{part}</Text>
+              <Text style={[typography.timerUnit, styles.unit]}>{['год', 'хв', 'сек'][index]}</Text>
+            </View>
+          </Fragment>
+        ))}
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  card: { borderRadius: radius.card, borderWidth: metrics.hairline, overflow: 'hidden' },
-  content: { padding: space.lg, gap: space.md },
-  heading: { flexDirection: 'row', alignItems: 'center', gap: space.md },
-  headingText: { flex: 1, minWidth: 0, gap: space.xs },
-  icon: { width: metrics.touchTarget, height: metrics.touchTarget, borderRadius: radius.control, justifyContent: 'center', alignItems: 'center' },
-  countdown: { borderTopWidth: metrics.hairline, paddingTop: space.md, gap: space.sm },
-  event: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
-  stacked: { flexDirection: 'column', alignItems: 'flex-start' },
-  eventLabel: { flexShrink: 1, color: palette.secondary },
-  digits: { flexDirection: 'row', gap: space.sm },
-  largeDigits: { flexDirection: 'column' },
-  largeDigit: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space.md },
-  digit: { flex: 1, minWidth: 0, paddingVertical: space.xs },
-  description: { color: palette.secondary },
+  card: { borderRadius: radius.hero, overflow: 'hidden', justifyContent: 'center' },
+  content: { padding: space.lg, gap: space.xs, alignItems: 'center' },
+  heading: { width: '100%', alignItems: 'center', gap: space.xs },
+  updated: { alignSelf: 'flex-end', color: palette.heroSecondary, textAlign: 'right' },
+  cornerTimestamp: { position: 'absolute', top: 0, right: 0 },
+  centered: { textAlign: 'center' },
+  event: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: space.xs },
+  description: { flexShrink: 1, color: palette.heroSecondary, textAlign: 'center' },
+  countdown: { width: '100%', backgroundColor: palette.timerSurface, borderRadius: radius.dialog, paddingHorizontal: space.sm, paddingVertical: space.xs, gap: space.xs },
+  digits: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'center', gap: space.sm },
+  largeDigits: { flexDirection: 'column', alignItems: 'stretch' },
+  largeDigit: { flex: 0, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  digit: { flex: 1, minWidth: 0, gap: space.xs },
+  number: { textAlign: 'center', paddingVertical: space.xs, borderRadius: radius.control, backgroundColor: palette.timerBackground, fontFamily: Platform.OS === 'ios' ? fonts.monospaceIOS : fonts.monospaceAndroid },
+  unit: { textAlign: 'center', color: palette.heroMuted },
+  separator: { opacity: 0.5, paddingTop: space.xs },
 });

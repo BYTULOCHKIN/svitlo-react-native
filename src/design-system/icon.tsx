@@ -26,6 +26,8 @@ import Star from 'lucide-react-native/icons/star';
 import Trash from 'lucide-react-native/icons/trash';
 import Users from 'lucide-react-native/icons/users';
 import X from 'lucide-react-native/icons/x';
+import Zap from 'lucide-react-native/icons/zap';
+import ZapOff from 'lucide-react-native/icons/zap-off';
 import { metrics, palette } from './tokens';
 
 // Static imports keep the icon set explicit; location keys remain compatible with saved data.
@@ -57,6 +59,8 @@ const icons = {
   style: Palette,
   support: LifeBuoy,
   website: Globe,
+  zap: Zap,
+  zapOff: ZapOff,
 };
 
 export type AppIconProps = LucideProps & { name: keyof typeof icons };

@@ -46,7 +46,7 @@ export function HomeScreen() {
                   ? <ActivityIndicator accessibilityLabel="Завантаження графіка" color={palette.green} style={{ height: metrics.loadingHeight }} />
                   : (
                       <>
-                        <StatusCard state={view.state} view={view} />
+                        <StatusCard state={view.state} view={view} updatedAt={query.snapshot?.updatedAt} />
                         <ScheduleFreshness snapshot={query.snapshot} current={!!query.currentDay} fetching={query.isFetching} failed={!!query.error} />
                         <ScheduleTimeline view={view} />
                       </>

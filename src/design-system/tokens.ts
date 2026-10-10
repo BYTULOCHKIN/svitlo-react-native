@@ -21,6 +21,10 @@ export const palette = {
   white: '#FFFFFF',
   black: '#000000',
   launcherBackground: '#E6E5E5',
+  timerBackground: '#1F293780',
+  timerSurface: '#00000033',
+  heroSecondary: '#FFFFFF99',
+  heroMuted: '#FFFFFF66',
 };
 export const powerColors = {
   on: { color: '#5DDD92', surface: '#20382B', border: '#345641', gradient: ['#203E2D', '#222A24'] as [string, string] },
@@ -28,10 +32,17 @@ export const powerColors = {
   possible: { color: '#FFC166', surface: '#3A3124', border: '#5F4D33', gradient: ['#443720', '#2C2821'] as [string, string] },
   unknown: { color: '#B8B8B8', surface: '#2C2C2C', border: '#454545', gradient: ['#343434', '#272727'] as [string, string] },
 };
+// HeroStatusCard.kt colors, retained within the compact React Native layout.
+export const statusCardColors = {
+  on: { color: '#22C55E', gradient: ['#1B4332', '#081C15'] as [string, string] },
+  off: { color: '#EF4444', gradient: ['#431B1B', '#1C0808'] as [string, string] },
+  possible: { color: '#FFA726', gradient: ['#49321B', '#24190D'] as [string, string] },
+  unknown: { color: '#B0B0B0', gradient: ['#333333', '#1E1E1E'] as [string, string] },
+};
 export const space = { none: 0, xxs: 2, xs: 4, sm: 8, md: 12, lg: 16, xl: 20, xxl: 24, xxxl: 32 };
-export const radius = { small: 8, control: 12, card: 20, dialog: 24, pill: 999 };
+export const radius = { small: 8, control: 12, card: 20, dialog: 24, hero: 32, pill: 999 };
 export const fontSize = { micro: 10, caption: 12, label: 13, body: 14, emphasis: 16, section: 18, title: 22, display: 28, timer: 32 };
-export const fonts = { regular: 'Inter_400Regular', medium: 'Inter_500Medium', semibold: 'Inter_600SemiBold', bold: 'Inter_700Bold' };
+export const fonts = { regular: 'Inter_400Regular', medium: 'Inter_500Medium', semibold: 'Inter_600SemiBold', bold: 'Inter_700Bold', monospaceAndroid: 'monospace', monospaceIOS: 'Menlo' };
 export const typography = {
   body: { fontFamily: fonts.regular, fontSize: fontSize.body, lineHeight: 21 },
   label: { fontFamily: fonts.medium, fontSize: fontSize.label, lineHeight: 19 },
@@ -40,6 +51,10 @@ export const typography = {
   section: { fontFamily: fonts.semibold, fontSize: fontSize.section, lineHeight: 25 },
   title: { fontFamily: fonts.semibold, fontSize: fontSize.title, lineHeight: 29 },
   timer: { fontFamily: fonts.semibold, fontSize: fontSize.timer, lineHeight: 40, fontVariant: ['tabular-nums'] },
+  heroTitle: { fontFamily: fonts.bold, fontSize: fontSize.title, lineHeight: 29 },
+  heroTimer: { fontWeight: 'bold', fontSize: fontSize.display, lineHeight: 32, fontVariant: ['tabular-nums'] },
+  timerUnit: { fontFamily: fonts.regular, fontSize: fontSize.micro, lineHeight: 14 },
+  timerLabel: { fontFamily: fonts.medium, fontSize: 11, lineHeight: 16, letterSpacing: 2 },
 } satisfies Record<string, TextStyle>;
 export const metrics = {
   hairline: 1,
@@ -48,6 +63,9 @@ export const metrics = {
   icon: 22,
   iconLarge: 28,
   heroIcon: 36,
+  compactHeroIcon: 28,
+  statusCardHeight: 207,
+  statusCardShortHeight: 118,
   iconContainer: 44,
   touchTarget: 48,
   loadingHeight: 120,
