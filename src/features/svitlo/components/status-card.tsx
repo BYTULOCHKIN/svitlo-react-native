@@ -25,37 +25,40 @@ export function StatusCard({ state, view }: { state: PowerState; view?: Schedule
         </Defs>
         <Rect width="100%" height="100%" fill="url(#status)" />
       </Svg>
-      <View style={styles.heading}>
-        <View style={[styles.icon, { backgroundColor: theme.surface }]}><SvitloIcon name="bulb" size={metrics.heroIcon} color={theme.color} /></View>
-        <View style={styles.headingText}>
-          <Text style={[typography.caption, { color: theme.color }]}>ЗАРАЗ · ЗА ГРАФІКОМ</Text>
-          <Text style={typography.title}>{view?.noOutagesPlanned ? 'Світло на весь день' : theme.title}</Text>
+      <View style={styles.content}>
+        <View style={styles.heading}>
+          <View style={[styles.icon, { backgroundColor: theme.surface }]}><SvitloIcon name="bulb" size={metrics.heroIcon} color={theme.color} /></View>
+          <View style={styles.headingText}>
+            <Text style={[typography.caption, { color: theme.color }]}>ЗАРАЗ · ЗА ГРАФІКОМ</Text>
+            <Text style={typography.title}>{view?.noOutagesPlanned ? 'Світло на весь день' : theme.title}</Text>
+          </View>
         </View>
+        {view?.remainingSeconds != null
+          ? (
+              <View style={[styles.countdown, { borderColor: theme.border }]}>
+                <View style={[styles.event, stacked && styles.stacked]}>
+                  <Text style={[typography.label, styles.eventLabel]}>{nextLabel}</Text>
+                  {view.next && <Text style={[typography.emphasis, { color: theme.color }]}>{formatMinute(view.next.start)}</Text>}
+                </View>
+                <View accessible accessibilityLabel={`Залишилось ${countdownParts(view.remainingSeconds).join(':')}`} style={[styles.digits, fontScale > metrics.timerStackFontScale && styles.largeDigits]}>
+                  {countdownParts(view.remainingSeconds).map((part, index) => (
+                    <View key={['hours', 'minutes', 'seconds'][index]} style={[styles.digit, fontScale > metrics.timerStackFontScale && styles.largeDigit]}>
+                      <Text style={[typography.timer, { color: theme.color, textAlign: 'center' }]}>{part}</Text>
+                      <Text style={[typography.caption, { color: palette.secondary, textAlign: 'center' }]}>{['год', 'хв', 'сек'][index]}</Text>
+                    </View>
+                  ))}
+                </View>
+              </View>
+            )
+          : <Text style={[typography.body, styles.description]}>{view?.noOutagesPlanned ? 'Відключення не заплановані на сьогодні' : nextLabel}</Text>}
       </View>
-      {view?.remainingSeconds != null
-        ? (
-            <View style={[styles.countdown, { borderColor: theme.border }]}>
-              <View style={[styles.event, stacked && styles.stacked]}>
-                <Text style={[typography.label, styles.eventLabel]}>{nextLabel}</Text>
-                {view.next && <Text style={[typography.emphasis, { color: theme.color }]}>{formatMinute(view.next.start)}</Text>}
-              </View>
-              <View accessible accessibilityLabel={`Залишилось ${countdownParts(view.remainingSeconds).join(':')}`} style={[styles.digits, fontScale > metrics.timerStackFontScale && styles.largeDigits]}>
-                {countdownParts(view.remainingSeconds).map((part, index) => (
-                  <View key={['hours', 'minutes', 'seconds'][index]} style={[styles.digit, fontScale > metrics.timerStackFontScale && styles.largeDigit]}>
-                    <Text style={[typography.timer, { color: theme.color, textAlign: 'center' }]}>{part}</Text>
-                    <Text style={[typography.caption, { color: palette.secondary, textAlign: 'center' }]}>{['год', 'хв', 'сек'][index]}</Text>
-                  </View>
-                ))}
-              </View>
-            </View>
-          )
-        : <Text style={[typography.body, styles.description]}>{view?.noOutagesPlanned ? 'Відключення не заплановані на сьогодні' : nextLabel}</Text>}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  card: { borderRadius: radius.card, borderWidth: metrics.hairline, overflow: 'hidden', padding: space.lg, gap: space.md },
+  card: { borderRadius: radius.card, borderWidth: metrics.hairline, overflow: 'hidden' },
+  content: { padding: space.lg, gap: space.md },
   heading: { flexDirection: 'row', alignItems: 'center', gap: space.md },
   headingText: { flex: 1, minWidth: 0, gap: space.xs },
   icon: { width: metrics.touchTarget, height: metrics.touchTarget, borderRadius: radius.control, justifyContent: 'center', alignItems: 'center' },
