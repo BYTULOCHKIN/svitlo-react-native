@@ -17,8 +17,8 @@ export function HomeScreen() {
   const [picking, setPicking] = useState(false);
   const { locations, selectedId, chooseFirst } = useLocations();
   const selected = locations.find(location => location.id === selectedId);
-  const query = useSchedule();
   const now = useClock();
+  const query = useSchedule(now);
   const queues = query.data?.queues.map(schedule => schedule.queue).sort((a, b) => a.localeCompare(b, 'uk', { numeric: true })) ?? [];
   const schedule = query.currentDay?.queues.find(item => item.queue === selected?.queue);
   const view = getScheduleView(schedule, getMinute(now), query.currentDay?.noOutagesScope === 'region');

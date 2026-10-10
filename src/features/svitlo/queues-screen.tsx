@@ -5,13 +5,14 @@ import { ScheduleFreshness } from './components/schedule-freshness';
 import { useLocations } from './location-store';
 import { toMatrixRows } from './schedule-matrix';
 import { palette, states } from './theme';
+import { useClock } from './use-clock';
 import { useSchedule } from './use-schedule';
 
 const colors: Record<PowerState, string> = { on: '#66BB6A', off: '#EF5350', possible: '#FFA726', unknown: '#333333' };
 const hours = Array.from({ length: 24 }, (_, hour) => hour);
 
 export function QueuesScreen() {
-  const query = useSchedule();
+  const query = useSchedule(useClock());
   const { locations, selectedId } = useLocations();
   const active = locations.find(location => location.id === selectedId)?.queue;
   const rows = toMatrixRows(query.data?.queues ?? []);

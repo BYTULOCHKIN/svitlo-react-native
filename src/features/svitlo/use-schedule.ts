@@ -1,11 +1,24 @@
-import { useQuery } from '@tanstack/react-query';
-import { useMemo } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useEffect, useMemo } from 'react';
+import { AppState } from 'react-native';
 import { getDateKey } from './models';
 import { scheduleRepository } from './schedule-cache';
 import { currentSchedule } from './schedule-repository';
 
-export function useSchedule() {
-  const date = getDateKey();
+export function useSchedule(now: Date) {
+  const date = getDateKey(now);
+  const client = useQueryClient();
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (state) => {
+      if (state !== 'active')
+        return;
+      const key = ['svitlo-schedule', getDateKey()];
+      const cached = client.getQueryState(key);
+      if (cached && Date.now() - cached.dataUpdatedAt >= 5 * 60 * 1000)
+        void client.invalidateQueries({ queryKey: key, exact: true }, { cancelRefetch: false });
+    });
+    return () => subscription.remove();
+  }, [client]);
   const saved = useMemo(() => {
     const snapshot = scheduleRepository.load();
     return snapshot && snapshot.day.date <= date ? snapshot : undefined;

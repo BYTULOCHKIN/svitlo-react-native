@@ -5,12 +5,18 @@ export type ScheduleDay = { date: string; queues: QueueSchedule[]; noOutagesScop
 export type LocationIcon = 'home' | 'work' | 'school' | 'shop' | 'gym' | 'parents' | 'cafe' | 'heart';
 export type Location = { id: string; name: string; queue: string; icon: LocationIcon };
 
+const kyivDate = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Kyiv', year: 'numeric', month: '2-digit', day: '2-digit' });
+const kyivTime = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Kyiv', hourCycle: 'h23', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
 export function getDateKey(now = new Date()) {
-  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  const parts = kyivDate.formatToParts(now);
+  return ['year', 'month', 'day'].map(type => parts.find(part => part.type === type)!.value).join('-');
 }
 
 export function getMinute(now = new Date()) {
-  return now.getHours() * 60 + now.getMinutes() + now.getSeconds() / 60;
+  const parts = kyivTime.formatToParts(now);
+  const value = (type: string) => Number(parts.find(part => part.type === type)!.value);
+  return value('hour') * 60 + value('minute') + value('second') / 60;
 }
 
 export function getCurrentState(schedule: QueueSchedule | undefined, minute: number): PowerState {
