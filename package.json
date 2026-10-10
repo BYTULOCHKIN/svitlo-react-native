@@ -1,5 +1,5 @@
 {
-  "name": "obytesapp",
+  "name": "svitlo",
   "version": "9.0.0",
   "private": true,
   "packageManager": "pnpm@10.12.3",
@@ -70,6 +70,7 @@
     "i18next": "^25.8.0",
     "lodash.memoize": "^4.1.2",
     "moti": "^0.30.0",
+    "parse5": "7.3.0",
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "react-error-boundary": "^6.1.0",

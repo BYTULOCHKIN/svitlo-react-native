@@ -1,1 +1,1 @@
-export { FeedScreen as default } from '@/features/feed/feed-screen';
+export { HomeScreen as default } from '@/features/svitlo/home-screen';

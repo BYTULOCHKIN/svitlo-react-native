@@ -18,7 +18,6 @@ module.exports = {
   coverageReporters: ['json-summary', ['text', { file: 'coverage.txt' }]],
   reporters: [
     'default',
-    ['github-actions', { silent: false }],
     'summary',
     [
       'jest-junit',
