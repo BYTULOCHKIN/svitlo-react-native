@@ -1,6 +1,1 @@
-import { View } from 'react-native';
-import { palette } from '@/features/svitlo/theme';
-
-export default function QueuesScreen() {
-  return <View style={{ flex: 1, backgroundColor: palette.background }} />;
-}
+export { QueuesScreen as default } from '@/features/svitlo/queues-screen';
