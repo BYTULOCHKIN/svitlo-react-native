@@ -44,6 +44,32 @@ describe('first queue selection', () => {
     expect(() => store.getState().add({ name: 'Дім', queue: '', icon: 'home' })).toThrow();
     expect(store.getState().locations).toEqual([]);
   });
+  it('deletes an inactive location without changing selection', () => {
+    const store = createLocationStore(memoryStorage(), () => 'work');
+    store.getState().chooseFirst('1.1');
+    store.getState().add({ name: 'Робота', queue: '2.1', icon: 'work' });
+    store.getState().remove('home');
+    expect(store.getState().selectedId).toBe('work');
+    expect(store.getState().locations).toHaveLength(1);
+  });
+  it('selects a remaining location after deleting the active one', () => {
+    const store = createLocationStore(memoryStorage(), () => 'work');
+    store.getState().chooseFirst('1.1');
+    store.getState().add({ name: 'Робота', queue: '2.1', icon: 'work' });
+    store.getState().remove('work');
+    expect(store.getState().selectedId).toBe('home');
+  });
+  it('persists deletion of the last location and allows choosing again', () => {
+    const persistence = memoryStorage();
+    const store = createLocationStore(persistence);
+    store.getState().chooseFirst('1.1');
+    store.getState().remove('home');
+    const restored = createLocationStore(persistence);
+    expect(restored.getState().locations).toEqual([]);
+    expect(restored.getState().selectedId).toBeNull();
+    restored.getState().chooseFirst('6.2');
+    expect(restored.getState().locations[0].queue).toBe('6.2');
+  });
   it('does not update the visible selection when persistence fails', () => {
     const store = createLocationStore({ getString: () => undefined, set: () => {
       throw new Error('Storage failure');

@@ -22,7 +22,7 @@ export function LocationDialog({ location, queues, onClose }: Props) {
   const [queue, setQueue] = useState(location?.queue ?? '');
   const [icon, setIcon] = useState<LocationIcon>(location?.icon ?? 'home');
   const [error, setError] = useState('');
-  const { add, edit } = useLocations();
+  const { add, edit, remove } = useLocations();
   const choices = [...new Set([...queues, ...(location ? [location.queue] : [])])];
   function save() {
     try {
@@ -32,6 +32,15 @@ export function LocationDialog({ location, queues, onClose }: Props) {
       onClose();
     }
     catch { setError('Не вдалося зберегти локацію. Спробуйте ще раз.'); }
+  }
+  function deleteLocation() {
+    if (!location)
+      return;
+    try {
+      remove(location.id);
+      onClose();
+    }
+    catch { setError('Не вдалося видалити локацію. Спробуйте ще раз.'); }
   }
   return (
     <Modal visible transparent animationType="fade" onRequestClose={onClose}>
@@ -53,6 +62,7 @@ export function LocationDialog({ location, queues, onClose }: Props) {
             {!!error && <Text accessibilityRole="alert" style={{ color: palette.red, paddingVertical: 12 }}>{error}</Text>}
           </ScrollView>
           <View style={{ flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', gap: 12, marginTop: 16 }}>
+            {location && <Pressable accessibilityRole="button" accessibilityLabel="Видалити локацію" onPress={deleteLocation} style={{ marginRight: 'auto', padding: 12 }}><SvitloIcon name="trash" color={palette.red} /></Pressable>}
             <Pressable accessibilityRole="button" onPress={onClose} style={{ padding: 12 }}><Text style={{ color: palette.secondary }}>Скасувати</Text></Pressable>
             <Pressable accessibilityRole="button" accessibilityState={{ disabled: !name.trim() || !queue }} disabled={!name.trim() || !queue} onPress={save} style={{ borderRadius: 24, padding: 12, backgroundColor: name.trim() && queue ? palette.green : palette.muted }}><Text style={{ color: palette.background }}>Зберегти</Text></Pressable>
           </View>

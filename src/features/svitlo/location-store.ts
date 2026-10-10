@@ -31,6 +31,7 @@ type LocationStore = Selection & {
   add: (location: Omit<Location, 'id'>) => void;
   edit: (location: Location) => void;
   select: (id: string) => void;
+  remove: (id: string) => void;
 };
 
 export function createLocationStore(persistence: LocationStorage, generateId = randomUUID) {
@@ -60,6 +61,11 @@ export function createLocationStore(persistence: LocationStorage, generateId = r
       select(id) {
         if (get().locations.some(location => location.id === id))
           save({ locations: get().locations, selectedId: id });
+      },
+      remove(id) {
+        const locations = get().locations.filter(location => location.id !== id);
+        const selectedId = get().selectedId === id ? locations[0]?.id ?? null : get().selectedId;
+        save({ locations, selectedId });
       },
     };
   });
