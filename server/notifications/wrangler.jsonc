@@ -8,9 +8,7 @@
 		"ENVIRONMENT": "pilot"
 	},
 	"triggers": {
-		"crons": [
-			"* * * * *"
-		]
+		"crons": []
 	},
 	"d1_databases": [
 		{

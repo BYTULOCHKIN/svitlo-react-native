@@ -2,7 +2,7 @@
 
 Тип: HITL.
 
-Статус: чинний Worker, EAS/FCM і реальний Android push/tap перевірені. Після погодженого перегляду архітектури реалізовано Node backend на Render, мінімальний D1/cron gateway, постійне блокування циклу та JSON API для застосунку. Gateway розгорнуто, міграцію D1 застосовано, чиста Node-збірка пройшла live source → remote D1 → JSON smoke для сьогодні й завтра. Render ще не розгорнуто: потрібні власний Git-репозиторій та доступ до акаунта. Повний gate і фактичний Render cron/source/native тест залишаються відкритими; задача не завершена.
+Статус: чинний Worker, EAS/FCM і реальний Android push/tap перевірені. Після погодженого перегляду архітектури реалізовано Node backend на Render, мінімальний D1/cron gateway, постійне блокування циклу та JSON API для застосунку. Gateway розгорнуто, міграцію D1 застосовано, чиста локальна Node-збірка пройшла live source → remote D1 → JSON smoke для сьогодні й завтра. Власний репозиторій підключено, Render розгорнуто; health, авторизація tick і читання D1 перевірені. Live source з Render завершується UND_ERR_CONNECT_TIMEOUT для обох дат. Додано захищену мережеву діагностику; переключення cron та застосунку відкладене до успішної перевірки джерела. Повний gate і фактичний Render cron/source/native тест залишаються відкритими; задача не завершена.
 
 Джерело: [PRD](../svitlo-notifications.prd.md). [Погоджене розбиття](../svitlo-notifications.issues-proposal.md).
 

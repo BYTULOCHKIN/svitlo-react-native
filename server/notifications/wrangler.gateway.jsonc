@@ -4,6 +4,7 @@
   "main": "gateway-worker.ts",
   "compatibility_date": "2026-10-11",
   "workers_dev": true,
+  "vars": { "BACKEND_URL": "https://svitlo-backend-pilot.onrender.com" },
   "triggers": { "crons": ["* * * * *"] },
   "d1_databases": [{
     "binding": "DB",
