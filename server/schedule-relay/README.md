@@ -18,6 +18,8 @@
 
 Код розміщується у власному [GitHub-репозиторії](https://github.com/BYTULOCHKIN/svitlo-react-native) на гілці `main`. Render розгорнуто: `https://svitlo-backend-pilot.onrender.com`. Запуск, доступ до D1, читання JSON та авторизація tick перевірені. Переключення cron і застосунку ще не виконано: live source завершується `UND_ERR_CONNECT_TIMEOUT`, попередній кеш залишається застарілим.
 
+Приватну мережеву діагностику перевірено після ручного деплою: DNS повертає `194.44.38.147` та `95.164.67.38`. Для кожної адреси HTTP/80 та HTTPS/443 завершилися `ETIMEDOUT` приблизно за 6000 ms, `tcpConnected: false`, `tlsConnected: false`. Локальні HTTPS-проби для обох адрес повернули 200. Це підтверджує відсутність успішного з'єднання на виміряному маршруті Render → POE; не встановлює, хто і з якої причини обмежує доступ. Заміна заголовків або парсера не змінює мережевий маршрут. Наступний крок — доступний сервер/збирач із перевіреним доступом до POE або узгодження доступу з власниками джерела. Вибір нового маршруту ще не погоджено; автоматичне оновлення та повний gate залишаються відкритими.
+
 1. Підключити цей репозиторій у Render через **New → Blueprint**, вибравши гілку `main` з кореневим [render.yaml](../../render.yaml).
 2. Blueprint створює `svitlo-backend-pilot`, **Web Service / Node / Free / Frankfurt**, Node `24.21.0`. Поле Root Directory залишити порожнім: збірка потребує спільних файлів із кореня репозиторію.
 3. Build Command: `npm ci --prefix server/schedule-relay && npm run build --prefix server/schedule-relay`. Start Command: `npm start --prefix server/schedule-relay`. Health Check Path: `/health`. Кореневі Expo-залежності не встановлюються.
