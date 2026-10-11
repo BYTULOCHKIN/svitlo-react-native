@@ -23,7 +23,7 @@ User stories PRD: 21, 22, 32, 34.
 
 11 жовтня 2026 року: type-check, lint, design:check та всі 31 комбінація design:contrast PASS. Jest: 26 suites / 130 tests PASS; серверний Node runner: 7 integration tests PASS. Перевірено реальну SQLite, захоплений HTML, API, мобільний клієнт, атомарний rollback, власний доступ, відсутність старих подій навіть за однакових timestamps, перезапуск і пагінацію. Компонентні тести підтверджують loading, empty, error/retry, картку та відсутність дублікатів.
 
-Локальний HTTP API відповідає на health. Android development APK із SecureStore зібрано успішно. [Підготовлені native flows](../../.maestro/svitlo-notifications/README.md) ще не запущено: ADB не показує підключених пристроїв. iOS, TalkBack/VoiceOver, реальний push та хмарні квоти цією задачею не підтверджені. [Інструкція локального пілота](../../server/notifications/README.md).
+Локальний HTTP API відповідає на health. Android development APK із SecureStore зібрано успішно. [Підготовлені native flows](../../.maestro/svitlo-notifications/README.md) не підтверджено: під час спроби запуску Samsung з’явився в ADB, але USB-команди й встановлення APK не відповідали; після перепідключення ADB пристрій став недоступним. Потрібне стабільне USB-з’єднання. iOS, TalkBack/VoiceOver, реальний push та хмарні квоти цією задачею не підтверджені. [Інструкція локального пілота](../../server/notifications/README.md).
 
 ## Blocked by
 
