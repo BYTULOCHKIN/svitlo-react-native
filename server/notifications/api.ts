@@ -1,6 +1,6 @@
 import type { createNotificationRepository } from './repository';
 import { ZodError } from 'zod';
-import { identitySchema } from '../../src/features/svitlo/notifications/models';
+import { deliverySchema, identitySchema } from '../../src/features/svitlo/notifications/models';
 import { NotificationApiError } from './repository';
 
 type Repository = ReturnType<typeof createNotificationRepository>;
@@ -21,6 +21,13 @@ export function createNotificationApi(repository: Repository) {
       if (url.pathname === '/v1/history' && request.method === 'GET') {
         const identity = identitySchema.parse({ id: request.headers.get('X-Installation-Id'), secret: request.headers.get('Authorization')?.replace(/^Bearer /, '') });
         return json(await repository.history(identity, url.searchParams.get('cursor') ?? undefined));
+      }
+      if (url.pathname === '/v1/delivery' && request.method === 'PUT') {
+        const identity = identitySchema.parse({ id: request.headers.get('X-Installation-Id'), secret: request.headers.get('Authorization')?.replace(/^Bearer /, '') });
+        const body = await request.text();
+        if (body.length > 4096)
+          throw new NotificationApiError(413, 'Завеликий запит');
+        return json(await repository.updateDelivery(identity, deliverySchema.parse(JSON.parse(body))));
       }
       return json({ error: 'Не знайдено' }, 404);
     }

@@ -1,15 +1,18 @@
+import type { ReactNode } from 'react';
 import type { createNotificationsClient } from './client';
 import type { PublicationNotification } from './models';
 import { useInfiniteQuery } from '@tanstack/react-query';
+import { useRef } from 'react';
 import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AppButton } from '@/design-system/button';
 import { AppText } from '@/design-system/text';
 import { metrics, palette, radius, space } from '@/design-system/tokens';
 
-type Client = ReturnType<typeof createNotificationsClient>;
+type Client = Pick<ReturnType<typeof createNotificationsClient>, 'history'>;
 
-export function NotificationsScreen({ client, hasLocations, native = true }: { client?: Client; hasLocations: boolean; native?: boolean }) {
+export function NotificationsScreen({ client, hasLocations, native = true, targetId, permissionCard }: { client?: Client; hasLocations: boolean; native?: boolean; targetId?: string; permissionCard?: ReactNode }) {
+  const scroll = useRef<ScrollView>(null);
   const query = useInfiniteQuery({
     queryKey: ['svitlo-notifications'],
     enabled: !!client && hasLocations && native,
@@ -23,8 +26,9 @@ export function NotificationsScreen({ client, hasLocations, native = true }: { c
   const canLoad = !!client && hasLocations && native;
   return (
     <SafeAreaView edges={['top']} style={styles.screen}>
-      <ScrollView contentContainerStyle={styles.page} refreshControl={canLoad ? <RefreshControl refreshing={query.isRefetching} onRefresh={() => { void query.refetch(); }} tintColor={palette.green} colors={[palette.green]} /> : undefined}>
+      <ScrollView ref={scroll} contentContainerStyle={styles.page} refreshControl={canLoad ? <RefreshControl refreshing={query.isRefetching} onRefresh={() => { void query.refetch(); }} tintColor={palette.green} colors={[palette.green]} /> : undefined}>
         <AppText variant="title" accessibilityRole="header">Сповіщення</AppText>
+        {permissionCard}
         {!hasLocations && <AppText tone="secondary">Оберіть свою чергу на головному екрані, щоб почати отримувати сповіщення.</AppText>}
         {hasLocations && !native && <AppText tone="secondary">Сповіщення доступні в мобільному застосунку.</AppText>}
         {hasLocations && native && !client && <AppText tone="secondary">Сповіщення ще недоступні. Підключення з’явиться в наступному оновленні.</AppText>}
@@ -36,18 +40,18 @@ export function NotificationsScreen({ client, hasLocations, native = true }: { c
           </View>
         )}
         {canLoad && !query.isPending && !query.error && !items.length && <AppText tone="secondary">Сповіщень поки немає. Тут з’являтимуться повідомлення після налаштування.</AppText>}
-        {items.map(item => <PublicationCard key={item.id} item={item} />)}
+        {items.map(item => <View key={item.id} onLayout={item.id === targetId ? event => scroll.current?.scrollTo({ y: event.nativeEvent.layout.y, animated: true }) : undefined}><PublicationCard item={item} selected={item.id === targetId} /></View>)}
         {query.hasNextPage && <AppButton variant="secondary" loading={query.isFetchingNextPage} onPress={() => { void query.fetchNextPage(); }}>Показати ще</AppButton>}
       </ScrollView>
     </SafeAreaView>
   );
 }
 
-function PublicationCard({ item }: { item: PublicationNotification }) {
+function PublicationCard({ item, selected }: { item: PublicationNotification; selected: boolean }) {
   const scheduleDate = new Date(`${item.scheduleDate}T12:00:00Z`).toLocaleDateString('uk-UA', { timeZone: 'Europe/Kyiv', day: 'numeric', month: 'long', year: 'numeric' });
   const createdAt = new Date(item.createdAt).toLocaleString('uk-UA', { timeZone: 'Europe/Kyiv', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' });
   return (
-    <View style={styles.card} testID={`notification-${item.id}`}>
+    <View style={[styles.card, selected && styles.selected]} testID={`notification-${item.id}`} accessibilityLabel={selected ? 'Сповіщення, яке ви відкрили' : undefined}>
       <AppText variant="section" accessibilityRole="header">Опубліковано графік</AppText>
       <AppText>{`Графік на ${scheduleDate}`}</AppText>
       <AppText variant="caption" tone="secondary">{createdAt}</AppText>
@@ -60,4 +64,5 @@ const styles = StyleSheet.create({
   page: { padding: metrics.pageGutter, paddingBottom: space.xxl, gap: space.lg, flexGrow: 1 },
   card: { padding: space.lg, borderRadius: radius.card, backgroundColor: palette.card, gap: space.sm },
   message: { gap: space.md },
+  selected: { borderWidth: metrics.hairline, borderColor: palette.green },
 });

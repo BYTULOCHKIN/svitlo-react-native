@@ -1,5 +1,5 @@
 import type { ScheduleDay } from '../../src/features/svitlo/models';
-import type { InstallationIdentity, NotificationPage, PublicationNotification } from '../../src/features/svitlo/notifications/models';
+import type { DeliverySettings, InstallationIdentity, NotificationPage, PublicationNotification } from '../../src/features/svitlo/notifications/models';
 import type { NotificationDatabase } from './database';
 import { dateSchema } from '../../src/features/svitlo/notifications/models';
 
@@ -60,8 +60,38 @@ export function createNotificationRepository(database: NotificationDatabase, now
       { sql: `INSERT OR IGNORE INTO notification_history (id, installation_id, event_id, created_at)
         SELECT e.id || ':' || i.id, i.id, e.id, e.created_at
         FROM notification_events e JOIN installations i ON i.start_sequence < e.sequence WHERE e.id = ?`, params: [id] },
+      { sql: `INSERT OR IGNORE INTO push_outbox (history_id, state)
+        SELECT h.id, 'queued' FROM notification_history h
+        JOIN notification_events e ON e.id = h.event_id
+        JOIN installation_delivery d ON d.installation_id = h.installation_id
+        WHERE e.id = ? AND d.permission = 'granted' AND d.push_token IS NOT NULL
+        AND e.sequence > d.enabled_after_sequence`, params: [id] },
     ]);
     return { id };
+  }
+  async function updateDelivery(identity: InstallationIdentity, settings: DeliverySettings) {
+    await authenticate(identity);
+    const token = settings.permission === 'granted' ? settings.token : null;
+    await database.batch([{
+      sql: `INSERT INTO installation_delivery (installation_id, permission, push_token, enabled_after_sequence)
+        VALUES (?, ?, ?, (SELECT COALESCE(MAX(sequence), 0) FROM notification_events))
+        ON CONFLICT(installation_id) DO UPDATE SET permission = excluded.permission,
+        push_token = CASE WHEN ? THEN installation_delivery.push_token ELSE excluded.push_token END,
+        enabled_after_sequence = CASE WHEN installation_delivery.permission = 'granted'
+          AND installation_delivery.push_token IS NOT NULL AND excluded.permission = 'granted'
+          THEN installation_delivery.enabled_after_sequence ELSE excluded.enabled_after_sequence END`,
+      params: [identity.id, settings.permission, token ?? '', token === undefined ? 1 : 0],
+    }, {
+      sql: 'UPDATE installation_delivery SET push_token = NULL WHERE installation_id = ? AND push_token = \'\'',
+      params: [identity.id],
+    }, {
+      sql: `UPDATE push_outbox SET state = 'failed', error = 'PermissionRevoked'
+        WHERE state = 'queued' AND history_id IN (SELECT h.id FROM notification_history h
+        JOIN installation_delivery d ON d.installation_id = h.installation_id
+        WHERE d.installation_id = ? AND (d.permission != 'granted' OR d.push_token IS NULL))`,
+      params: [identity.id],
+    }]);
+    return { ok: true };
   }
 
   async function history(identity: InstallationIdentity, cursor?: string): Promise<NotificationPage> {
@@ -81,7 +111,7 @@ export function createNotificationRepository(database: NotificationDatabase, now
     const last = page.at(-1);
     return { items: page, nextCursor: items.length > 50 && last ? `${last.createdAt}|${last.id}` : null };
   }
-  return { register, publish, history };
+  return { register, publish, history, updateDelivery };
 }
 
 function parseCursor(cursor: string) {

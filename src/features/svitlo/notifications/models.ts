@@ -17,3 +17,8 @@ export const notificationSchema = z.object({
 export type PublicationNotification = z.infer<typeof notificationSchema>;
 export const historySchema = z.object({ items: z.array(notificationSchema), nextCursor: z.string().nullable() });
 export type NotificationPage = z.infer<typeof historySchema>;
+export const deliverySchema = z.object({
+  permission: z.enum(['undetermined', 'granted', 'denied']),
+  token: z.string().regex(/^(?:ExpoPushToken|ExponentPushToken)\[[\w-]+\]$/).nullable().optional(),
+}).refine(value => value.permission === 'granted' || !value.token);
+export type DeliverySettings = z.infer<typeof deliverySchema>;

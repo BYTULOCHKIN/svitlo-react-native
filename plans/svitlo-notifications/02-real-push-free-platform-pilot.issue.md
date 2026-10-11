@@ -2,7 +2,7 @@
 
 Тип: HITL.
 
-Статус: не почато.
+Статус: код пілота підготовлено, локальна валідація проходить; реальний push і Cloudflare Free gate очікують власних акаунтів/credentials та Samsung. Задача не завершена.
 
 Джерело: [PRD](../svitlo-notifications.prd.md). [Погоджене розбиття](../svitlo-notifications.issues-proposal.md).
 
@@ -24,3 +24,11 @@ User stories PRD: 2, 17, 18, 19, 20, 22, 26, 37, 38.
 ## Blocked by
 
 - Blocked by #[plans/svitlo-notifications/01-installation-history-pilot.issue.md](./01-installation-history-pilot.issue.md).
+
+## Implementation / validation
+
+Підготовлено Expo Notifications permission flow, реєстрацію токена й стану ОС, атомарний outbox, пакетний Expo REST transport, перехід до картки, D1 adapter, міграцію та Worker з cron/private pilot trigger. [Відтворення й звіт](../../server/notifications/pilot.md).
+
+Локальні тести перевіряють відсутність автоматичного запиту дозволу, відмову, OS settings, тимчасову відсутність токена, захист delivery API, fan-out на 100 одержувачів, повторні виклики, зміну токена та збереження історії після помилки доставки. Wrangler dry-run і локальні workerd/D1 HTTP smoke та cron пройшли; реальне джерело доступне з локального workerd.
+
+Acceptance criteria залишаються відкритими до native/remote перевірки. Власні EAS/Cloudflare/FCM налаштування у середовищі відсутні, `adb devices` не показує Samsung. CPU, квоти віддаленої D1 та реальний показ push не виміряні; iOS не перевірено. Це не виміряний висновок про придатність тарифу.

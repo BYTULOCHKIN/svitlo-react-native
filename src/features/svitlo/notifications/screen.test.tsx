@@ -14,7 +14,7 @@ afterEach(() => {
 function show(history = jest.fn(async () => ({ items: [item], nextCursor: null as string | null })), hasLocations = true) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } });
   clients.push(client);
-  render(<QueryClientProvider client={client}><NotificationsScreen client={{ connect: jest.fn(), reset: jest.fn(), history }} hasLocations={hasLocations} /></QueryClientProvider>);
+  render(<QueryClientProvider client={client}><NotificationsScreen client={{ history }} hasLocations={hasLocations} /></QueryClientProvider>);
   return history;
 }
 

@@ -1,4 +1,4 @@
-import type { InstallationIdentity } from './models';
+import type { DeliverySettings, InstallationIdentity } from './models';
 import { historySchema, registrationSchema } from './models';
 
 type ClientOptions = { url: string; getIdentity: () => Promise<InstallationIdentity>; request?: typeof fetch };
@@ -38,6 +38,10 @@ export function createNotificationsClient({ url, getIdentity, request = fetch }:
   return {
     connect,
     reset: () => { registration = undefined; },
+    async updateDelivery(settings: DeliverySettings) {
+      const identity = await connect();
+      await send('/v1/delivery', { method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${identity.secret}`, 'X-Installation-Id': identity.id }, body: JSON.stringify(settings) });
+    },
     async history(cursor?: string) {
       const identity = await connect();
       const data = await send(`/v1/history${cursor ? `?cursor=${encodeURIComponent(cursor)}` : ''}`, { headers: { 'Authorization': `Bearer ${identity.secret}`, 'X-Installation-Id': identity.id } });

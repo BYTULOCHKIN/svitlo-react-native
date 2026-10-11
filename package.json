@@ -11,7 +11,10 @@
   "scripts": {
     "notifications:local": "node --require tsx/cjs server/notifications/local-server.ts",
     "notifications:fixture": "node --require tsx/cjs server/notifications/publish-fixture.ts",
-    "notifications:test": "node --require tsx/cjs --test server/notifications/integration.node.ts",
+    "notifications:test": "node --require tsx/cjs --test server/notifications/integration.node.ts server/notifications/push.integration.node.ts",
+    "notifications:worker": "wrangler dev --config server/notifications/wrangler.jsonc",
+    "notifications:worker:check": "wrangler deploy --dry-run --config server/notifications/wrangler.jsonc --outdir .expo/notifications/worker-build",
+    "notifications:worker:smoke": "node --require tsx/cjs server/notifications/worker-smoke.ts",
     "design:generate": "node --require tsx/cjs scripts/generate-design-theme.ts",
     "design:check": "node --require tsx/cjs scripts/generate-design-theme.ts --check",
     "design:contrast": "node --require tsx/cjs scripts/check-component-contrast.ts",
@@ -74,6 +77,7 @@
     "expo-image": "~3.0.11",
     "expo-linking": "~8.0.11",
     "expo-localization": "~17.0.8",
+    "expo-notifications": "~0.32.17",
     "expo-router": "~6.0.22",
     "expo-secure-store": "~15.0.8",
     "expo-splash-screen": "~31.0.13",
@@ -146,7 +150,8 @@
     "np": "^10.3.0",
     "tailwindcss": "4.1.18",
     "tsx": "^4.21.0",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "wrangler": "^4.149.0"
   },
   "expo": {
     "doctor": {
