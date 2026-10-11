@@ -17,6 +17,24 @@ type Options = {
 };
 type Lease = { owner: string; completed_slot: number };
 
+function failureReason(error: unknown) {
+  if (!(error instanceof Error))
+    return 'unavailable';
+  const cause = error.cause as { code?: string } | undefined;
+  const codes = ['UND_ERR_CONNECT_TIMEOUT', 'ETIMEDOUT', 'ECONNRESET', 'ECONNREFUSED', 'ENOTFOUND', 'EAI_AGAIN', 'CERT_HAS_EXPIRED', 'UNABLE_TO_VERIFY_LEAF_SIGNATURE'];
+  if (cause?.code && codes.includes(cause.code))
+    return cause.code;
+  if (error.name === 'TimeoutError' || error.name === 'AbortError')
+    return 'timeout';
+  if (/^Source HTTP \d{3}$/.test(error.message))
+    return error.message.replace('Source HTTP ', 'http-');
+  if (error.message === 'Source date does not match request')
+    return 'invalid-date';
+  if (error.message === 'Source response too large')
+    return 'body-too-large';
+  return 'unavailable';
+}
+
 export function createBackendApi(options: Options) {
   if (options.tickToken.length < 32 || options.tickToken.length > 256)
     throw new Error('Invalid tick token');
@@ -44,10 +62,14 @@ export function createBackendApi(options: Options) {
       const initialized = lease.completed_slot >= 0 && !!await database.first({ sql: 'SELECT date FROM schedule_snapshots LIMIT 1', params: [] });
       const today = kyivToday(new Date(started));
       const tomorrow = new Date(Date.parse(`${today}T00:00:00Z`) + 86400000).toISOString().slice(0, 10);
-      const sources: { date: string; valid: boolean; queues?: number }[] = [];
+      const sources: { date: string; valid: boolean; queues?: number; stage?: string; reason?: string }[] = [];
       for (const date of [today, tomorrow]) {
+        let stage = 'fetch';
         try {
-          const snapshot = validatedSnapshot(await source(date), date, now());
+          const received = await source(date);
+          stage = 'validate';
+          const snapshot = validatedSnapshot(received, date, now());
+          stage = 'persist';
           const previous = await store.get(date);
           // Initial known schedules establish a baseline; restarts retain it in D1.
           if (initialized && !previous)
@@ -55,7 +77,7 @@ export function createBackendApi(options: Options) {
           await store.save(snapshot);
           sources.push({ date, valid: true, queues: snapshot.day.queues.length });
         }
-        catch { sources.push({ date, valid: false }); }
+        catch (error) { sources.push({ date, valid: false, stage, reason: failureReason(error) }); }
       }
       const delivery = await dispatchPush(database, options.transport, options.expoAccessToken);
       await database.batch([{

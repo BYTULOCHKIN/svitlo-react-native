@@ -22,7 +22,9 @@ export function validatePilotHtml(html: string, date: string) {
 }
 
 export async function readSourceText(response: Response, maxBytes = 256000) {
-  if (!response.ok || !response.body)
+  if (!response.ok)
+    throw new Error(`Source HTTP ${response.status}`);
+  if (!response.body)
     throw new Error('Source unavailable');
   const reader = response.body.getReader();
   const decoder = new TextDecoder();

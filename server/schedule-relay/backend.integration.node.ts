@@ -144,6 +144,29 @@ test('source failure keeps the last verified cache and still drains an already d
   finally { p.close(); }
 });
 
+test('source diagnostics expose only a network code and preserve the verified cache', async () => {
+  const p = pipeline();
+  try {
+    await p.api(tick());
+    p.advance();
+    const api = createBackendApi({ ...p.options, source: async () => {
+      throw new Error('private upstream headers and credentials', { cause: { code: 'UND_ERR_CONNECT_TIMEOUT' } });
+    } });
+    const response = await api(tick());
+    const result = await response.json();
+    assert.equal(result.sources.length, 2);
+    for (const source of result.sources) {
+      assert.equal(source.valid, false);
+      assert.equal(source.stage, 'fetch');
+      assert.equal(source.reason, 'UND_ERR_CONNECT_TIMEOUT');
+    }
+    assert.equal(JSON.stringify(result).includes('private upstream'), false);
+    const snapshot = await (await api(new Request('https://backend.invalid/v1/schedules'))).json();
+    assert.equal(snapshot.verifiedAt, initial);
+  }
+  finally { p.close(); }
+});
+
 test('an interrupted lease blocks parallel work then expires; claimed pushes are not resent after restart', async () => {
   const p = pipeline();
   try {
