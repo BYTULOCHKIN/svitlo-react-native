@@ -1,16 +1,26 @@
 {
-  "$schema": "../../node_modules/wrangler/config-schema.json",
-  "name": "svitlo-notifications-pilot",
-  "main": "worker.ts",
-  "compatibility_date": "2026-10-11",
-  "workers_dev": true,
-  "vars": { "ENVIRONMENT": "pilot" },
-  "triggers": { "crons": ["* * * * *"] },
-  "d1_databases": [{
-    "binding": "DB",
-    "database_name": "svitlo-notifications-pilot",
-    "database_id": "00000000-0000-0000-0000-000000000000",
-    "migrations_dir": "migrations"
-  }],
-  "observability": { "enabled": true }
+	"$schema": "../../node_modules/wrangler/config-schema.json",
+	"name": "svitlo-notifications-pilot",
+	"main": "worker.ts",
+	"compatibility_date": "2026-10-11",
+	"workers_dev": true,
+	"vars": {
+		"ENVIRONMENT": "pilot"
+	},
+	"triggers": {
+		"crons": [
+			"* * * * *"
+		]
+	},
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "svitlo-notifications-pilot",
+			"database_id": "d6ae8493-fa50-4711-82b1-8b00fa6589f8",
+			"migrations_dir": "migrations"
+		}
+	],
+	"observability": {
+		"enabled": true
+	}
 }

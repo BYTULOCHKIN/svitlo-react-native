@@ -1,6 +1,6 @@
 # Перевірка задачі 02
 
-Статус: локальний прототип. Реальний push на Samsung та Cloudflare Free gate очікують власних доступів і пристрою. iOS не перевірено. Платний тариф не вмикається автоматично.
+Статус: прототип розгорнуто у власному Cloudflare акаунті; /health і remote API/D1 smoke PASS. Реальний push на Samsung та Cloudflare Free gate очікують Expo/EAS/FCM, пристрою й вимірювань. iOS не перевірено. Платний тариф не вмикається автоматично.
 
 ## Підготовлена реалізація
 
@@ -43,7 +43,9 @@ Smoke реєструє тестову інсталяцію, перевіряє D
 
 ## Cloudflare та фактичний gate
 
-У `wrangler.jsonc` нульовий database ID для локального запуску. Деплой і віддалені міграції ще не виконувалися.
+11 жовтня 2026 року в `wrangler.jsonc` підключено створену користувачем D1 через прив’язку `DB`, обидві віддалені міграції застосовано. Код Worker розгорнуто на https://svitlo-notifications-pilot.svitlonorify.workers.dev, version `820c41a9-c27b-4d9e-811d-676fe3b99374`. `PILOT_RUN_TOKEN` збережено після розгортання; значення секрету не читалося. Cron `* * * * *` зареєстровано; успішний scheduled invocation і доступ до джерела ще потребують окремого підтвердження.
+
+Початкову помилку налаштування усунуто: автоматично додана друга D1-прив’язка мала реальний ID, тоді як `DB` залишалася з нульовим ID. Їх об’єднано в одну коректну `DB`. До виправлення створена база не мала таблиць; додавання секрету створило Worker без розгортання коду застосунку.
 
 1. Увійти у власний Cloudflare акаунт на Free plan, створити D1 (`wrangler d1 create svitlo-notifications-pilot`) і підставити ID у конфіг. Застосувати міграції з `--remote`, розгорнути Worker. Платний тариф не вмикати.
 2. Задати приватний `PILOT_RUN_TOKEN` через `wrangler secret put` — від 32 випадкових символів. Якщо Expo enhanced push security увімкнено, задати серверний `EXPO_ACCESS_TOKEN`. Значення не передавати в чат або мобільний bundle.
@@ -60,10 +62,10 @@ Smoke реєструє тестову інсталяцію, перевіряє D
 | Перевірка | Локально | Cloudflare / пристрій |
 | --- | --- | --- |
 | Дозвіл, відмова, OS settings, push navigation | Jest PASS | Samsung очікується |
-| Auth, міграції, історія через Worker/D1 | workerd HTTP smoke PASS | Не виконано |
+| Auth, міграції, історія через Worker/D1 | workerd HTTP smoke PASS | Remote smoke PASS; обидві міграції застосовано |
 | Реальне джерело з локального workerd | `sourceValid=true`; cron `wallMs=328`, 3 SQL | Доступ із Cloudflare не перевірено |
 | 100 одержувачів, один REST-запит, без дублів | SQLite integration PASS; публікація + розсилка = 8 SQL; Expo transport підмінений | Не виконано |
-| Worker bundle, Android APK | Wrangler dry-run, assembleDebug PASS | Worker не розгорнуто; Samsung очікується |
+| Worker bundle, Android APK | Wrangler dry-run, assembleDebug PASS | Worker розгорнуто; /health 200 `{"ok":true}`; Samsung очікується |
 | CPU, квоти D1, добовий бюджет | Локальні значення не доказ | Не виміряно |
 | Реальний показ / tap / cold launch | Код і unit-тести підготовлені | Samsung потребує стабільного USB-з’єднання |
 
