@@ -36,7 +36,7 @@ export function createScheduleRepository(persistence: Persistence, fetchDay: (da
     const day = await fetchDay(date, signal);
     if (!isDay(day) || day.date !== date)
       throw new Error('Отримано некоректний графік або іншу дату.');
-    const snapshot = { day, updatedAt: now() };
+    const snapshot = { day, updatedAt: day.verifiedAt ?? now() };
     try {
       persistence.set(KEY, JSON.stringify({ version: 1, ...snapshot }));
       return snapshot;

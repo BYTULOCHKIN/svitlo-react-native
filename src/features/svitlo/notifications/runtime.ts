@@ -14,6 +14,6 @@ const installation = createInstallationManager({
   setSecret: secret => SecureStore.setItemAsync(secretKey, secret, { keychainAccessible: SecureStore.WHEN_UNLOCKED_THIS_DEVICE_ONLY }),
 }, () => ({ id: randomUUID(), secret: Array.from(getRandomBytes(32), byte => byte.toString(16).padStart(2, '0')).join('') }));
 
-const url = process.env.EXPO_PUBLIC_NOTIFICATIONS_API_URL;
+const url = process.env.EXPO_PUBLIC_SVITLO_API_URL ?? process.env.EXPO_PUBLIC_NOTIFICATIONS_API_URL;
 // No demo data or localhost fallback is included in a release build.
 export const notificationsClient = url ? createNotificationsClient({ url, getIdentity: () => installation.get() }) : undefined;

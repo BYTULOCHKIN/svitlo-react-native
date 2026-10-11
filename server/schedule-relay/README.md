@@ -1,35 +1,64 @@
-# Сервіс отримання графіків
+# Render backend для ЄСвітло
 
-Підготовлений альтернативний шлях для пілота 02. Сайт обленерго відповідає локальному Node, але прямі запити з Cloudflare повторно завершуються таймаутом. Цей сервіс завантажує й валідовує лише поточні графіки; історія, токени пристроїв і push залишаються в Cloudflare/D1. Хмарне розгортання relay ще не виконано, провайдер очікує погодження.
+11 жовтня 2026 погоджено архітектуру: Node.js на Render отримує та перевіряє графіки, обслуговує API застосунку, створює історію й відправляє Expo push. Cloudflare запускає захищений `/internal/tick` щохвилини та надає захищений доступ до постійної D1. Платний тариф не вмикається.
 
-## Перевірена поведінка
+## Реалізована поведінка
 
-- `GET /health` — перевірка запуску без зовнішнього запиту.
-- `GET /v1/schedules?date=YYYY-MM-DD` з `Authorization: Bearer <SCHEDULE_RELAY_TOKEN>` — `{day, verifiedAt}`. Доступні лише сьогодні й завтра за київською датою; за замовчуванням — сьогодні.
-- HTML проходить той самий валідатор дати, повноти доби, черг і відомих станів. Неповна відповідь не замінює графік.
-- Кеш у пам’яті на 55 секунд і спільний запит для одночасних звернень. Збій джерела дає 503; старі дані не отримують нову дату перевірки.
-- Без правильного токена — 404. Секрети й токени пристроїв у відповіді відсутні.
+- `GET /health` — перевірка запуску Node, без запиту до джерела.
+- `GET /v1/schedules?date=YYYY-MM-DD` — публічний JSON із D1: `date`, `queues`, `verifiedAt`, `stale`. Читання не звертається до обленерго. Після невдалої перевірки timestamp збереженого графіка не змінюється.
+- `POST /v1/installations`, `GET /v1/history`, `PUT /v1/delivery` — чинний контракт інсталяції, її секрету, історії та дозволу ОС. Node використовує ті самі таблиці, тому ідентичність та попередня історія зберігаються.
+- `POST /internal/tick` із `Authorization: Bearer <TICK_RUN_TOKEN>` — перевіряє сьогодні та завтра за Europe/Kyiv, зберігає валідні графіки, створює першу публікацію нового дня та відправляє до 100 повідомлень одним пакетом Expo. Неправильний токен повертає 404.
+- Початкові вже доступні графіки утворюють базовий стан без старих публікацій. Унікальність подій та outbox зберігається в D1. Зміна вже відомого графіка оновлює JSON; повідомлення про зміну, попередження за 10 хвилин, підписки та 30-денне очищення залишаються наступними issue.
+- Блокування в D1 допускає один цикл за хвилинний слот. Воно переживає перезапуск; після аварійного завершення звільняється через 5 хвилин. Вже claimed або неоднозначно відправлені push не повторюються автоматично — повне відновлення доставки залишається issue 14.
 
-11 жовтня 2026: standalone bundle зібрано, локальний HTTP smoke отримав живий графік за 2026-10-11 із 12 чергами. Інтеграційні тести перевірили авторизацію, межі дат, спільний запит, кеш і відмову джерела. Це не доказ доступності сайту з Render.
+Чинний production gateway: `https://svitlo-notifications-storage.svitlonorify.workers.dev`. Доступ до `/internal/database` лише за `STORAGE_API_TOKEN`. Команди параметризовані, обмежені за кількістю, розміром і видами SQL. Секрет дає доступ тільки до прив'язаної бази застосунку; Cloudflare account API key на Render не потрібен.
 
-## Розгортання на Render Free
+## Запуск Render Free
 
-У корені є [render.yaml](../../render.yaml), профіль `free`, регіон Frankfurt, Node 24.21.0. Потрібен власний Git-репозиторій: поточний `origin` посилається на чужий upstream-шаблон і не використовується для публікації змін.
+Поточний `origin` посилається на чужий upstream-шаблон. Потрібен власний приватний Git-репозиторій з поточною гілкою `feat/svitlo-migration`. Render ще не розгорнуто: доступ до акаунта та URL репозиторію не надані.
 
-1. Розмістити код у власному приватному Git-репозиторії та підключити його в Render як Blueprint. Картку або платний compute plan не додавати для цього пілота.
-2. Render виконає `npm ci --prefix server/schedule-relay`, збере окремий bundle та запустить його. Залежності мобільного застосунку не встановлюються. Перевірити `/health` нової адреси.
-3. Згенерований Render секрет `SCHEDULE_RELAY_TOKEN` зберегти локально в ігнорованому файлі `.credentials/schedule-relay-token.txt`. Не передавати його в чат або `EXPO_PUBLIC_*`.
-4. Додати HTTPS адресу сервісу як `SCHEDULE_RELAY_URL` у vars основного `server/notifications/wrangler.jsonc`; однойменний токен записати як Cloudflare secret `SCHEDULE_RELAY_TOKEN`.
-5. Розгорнути Worker, перевірити фактичний cron `sourceValid=true`, оновлення `verifiedAt` публічного API, повноту таблиці й поведінку після недоступності джерела. Публічне читання `/v1/schedules` не викликає relay — користувачі читають D1; джерело перевіряє cron.
+1. Підключити власний репозиторій у Render через **New → Blueprint**, вибравши гілку з кореневим [render.yaml](../../render.yaml).
+2. Blueprint створює `svitlo-backend-pilot`, **Web Service / Node / Free / Frankfurt**, Node `24.21.0`. Поле Root Directory залишити порожнім: збірка потребує спільних файлів із кореня репозиторію.
+3. Build Command: `npm ci --prefix server/schedule-relay && npm run build --prefix server/schedule-relay`. Start Command: `npm start --prefix server/schedule-relay`. Health Check Path: `/health`. Кореневі Expo-залежності не встановлюються.
+4. У Render задати серверні змінні:
 
-Для запису секрету без виведення значення:
+| Змінна | Значення |
+| --- | --- |
+| `STORAGE_API_URL` | `https://svitlo-notifications-storage.svitlonorify.workers.dev` |
+| `STORAGE_API_TOKEN` | Вміст локального `.credentials/storage-api-token.txt` |
+| `TICK_RUN_TOKEN` | Вміст локального `.credentials/tick-run-token.txt` |
+| `EXPO_ACCESS_TOKEN` | Лише якщо ввімкнено відповідний захист Expo Push API |
+
+Обидва токени вже створені локально, виключені з Git і записані у production gateway. Не передавати їх у чат або `EXPO_PUBLIC_*`. Для автоматичного керування Render API key можна зберегти в `.credentials/render-api-key.txt` (**Account Settings → API Keys**); браузерний вхід не надає CLI/API сесію.
+
+5. Після **Live** перевірити `/health`, авторизований `/internal/tick`, актуальні `verifiedAt` та графіки на обидві дати. Початковий запуск може зайняти довше, ніж звичайний HTTP timeout.
+6. Після source/auth smoke Render спочатку видалити cron зі старого `server/notifications/wrangler.jsonc` й передеплоїти старий пілот: це зупиняє паралельне читання outbox, зберігаючи його HTTP API та секрети. Потім у [wrangler.gateway.jsonc](../notifications/wrangler.gateway.jsonc) додати `vars.BACKEND_URL` із фактичною HTTPS адресою Render та виконати:
 
 ```powershell
-Get-Content -Raw .credentials/schedule-relay-token.txt | node.exe node_modules/wrangler/bin/wrangler.js secret put SCHEDULE_RELAY_TOKEN --config server/notifications/wrangler.jsonc
+node.exe node_modules/wrangler/bin/wrangler.js deploy --config server/notifications/wrangler.gateway.jsonc
 ```
 
-За [правилами Render Free](https://render.com/docs/free), сервіс засинає після 15 хвилин без вхідних запитів, запуск займає приблизно хвилину; доступно 750 годин на місяць на workspace. Регулярний робочий запит cron раз на хвилину забезпечує вхідний трафік; перезапуски та початковий запуск усе одно потрібно перевірити. Один постійно активний сервіс займає до 744 годин у 31-денному місяці. Free може призупинятися через квоти або надмірний зовнішній трафік; автоматичний платний перехід не дозволений. Залежність від цього сервісу приймається тільки після хмарного тесту.
+Cron уже оголошений як `* * * * *`, але без `BACKEND_URL` він не запускає обробку. Cloudflare надсилає POST із токеном, очікує результат і не розбирає графіки або Expo tickets. Статус фіксується без секретів.
 
-## Власний Node-сервер
+7. Після перевірки фактичного cron задати в `.env.local` `EXPO_PUBLIC_SVITLO_API_URL=<фактична HTTPS адреса Render>` й перезапустити Metro/оновити збірку. Ця одна адреса підключає JSON графіків та історію/доставку. Помилка налаштованого backend не запускає прямий запит до обленерго; час у кеші зберігає серверний `verifiedAt`.
+8. За потреби чинну адресу пілота можна переключити на `gateway-worker.ts` із тими самими D1 та новими secrets/vars — публічні `/v1/*` тоді проксіюються на Node. Прямий API Render залишається основним для застосунку.
 
-Та сама збірка запускається на Node 24 без Render. Задати `SCHEDULE_RELAY_TOKEN`, `PORT`, виконати `npm ci --prefix server/schedule-relay`, `npm run build --prefix server/schedule-relay`, `npm start --prefix server/schedule-relay`. Зовнішня адреса повинна мати HTTPS. Перевірки Cloudflare, свіжості та недоступності джерела залишаються обов’язковими.
+## Перевірки та межі
+
+Чиста окрема збірка Node без кореневого `node_modules` пройшла. Вона через реальний production gateway/D1 отримала живі графіки на 2026-10-11 та 2026-10-12 по 12 черг, виконала цикл за 2058 ms і повернула `stale: false`. Початковий цикл не створив старих push. Без токена `/internal/tick` повернув 404, чужа історія — 401. Локальний процес після smoke зупинено.
+
+Це перевірка локального Node → Cloudflare/D1, **не доказ доступності обленерго з Render** або стабільності Render Free. Наступні хмарні перевірки: source access з Render, фактичний cron, холодний запуск/перезапуск, реальний Samsung push через Node та актуальні квоти/CPU gateway.
+
+За [умовами Render Free](https://render.com/docs/free), сервіс засинає після 15 хвилин без вхідних запитів, має 750 годин на місяць на workspace, може перезапускатися. Щохвилинний робочий запит за нормальної роботи запобігає idle sleep. Локальні файли й SQLite не є постійним сховищем; історія, токени, графіки та завдання лежать у D1.
+
+Для [окремого benchmark gateway](../notifications/wrangler.gateway-benchmark.jsonc) використовується тільки disposable D1. [benchmark-node.ts](./benchmark-node.ts) перевіряє три повтори з 100 синтетичними інсталяціями, один mock Expo пакет, 100 різних карток і відсутність дублювання після повтору/перезапуску. URL production відхиляється до очищення seed.
+
+```powershell
+$env:SVITLO_STORAGE_BENCHMARK_URL='https://svitlo-notifications-storage-benchmark.svitlonorify.workers.dev'
+$env:SVITLO_STORAGE_BENCHMARK_TOKEN_FILE='.expo/notifications/storage-benchmark-token'
+npm.cmd run notifications:backend:benchmark
+```
+
+Остаточні три повтори: 14 gateway HTTP-запитів на обробку публікації, один пакет зі 100 повідомлень, 100 mock accepted, 100 окремих карток, replay skipped. Wall time: 1493, 1753, 1742 ms; CPU локального Node: 47, 124, 63 ms. У tail захоплено 36 gateway samples із підготовки та двох серій вимірювань: усі `ok`, CPU 0–3 ms, медіана 1 ms, p95 2 ms. Tail не захопив усі запити, тому цей результат не є повним доказом бюджету кожної майбутньої операції.
+
+TypeScript, lint, 30 серверних інтеграційних тестів і 31 Jest suite / 150 tests пройшли. Не заявляється доставка на 100 фізичних пристроїв. Заміри Node на локальному ПК не є вимірами Render. Результати gateway CPU беруться лише з Cloudflare tail.

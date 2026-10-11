@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: svitlo-schedule-relay
+    name: svitlo-backend-pilot
     runtime: node
     plan: free
     region: frankfurt
@@ -10,5 +10,9 @@ services:
     envVars:
       - key: NODE_VERSION
         value: 24.21.0
-      - key: SCHEDULE_RELAY_TOKEN
-        generateValue: true
+      - key: STORAGE_API_URL
+        value: https://svitlo-notifications-storage.svitlonorify.workers.dev
+      - key: STORAGE_API_TOKEN
+        sync: false
+      - key: TICK_RUN_TOKEN
+        sync: false

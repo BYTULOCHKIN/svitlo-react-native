@@ -31,6 +31,14 @@ it('persists a region confirmation without inventing queues', async () => {
   expect(repo.load()?.day).toEqual(confirmation);
 });
 
+it('preserves backend verification time across fetch and restart instead of making stale data look fresh', async () => {
+  const persistence = memory();
+  const verified = { ...day, verifiedAt: 1000 };
+  const repo = createScheduleRepository(persistence, async () => verified, () => 1000000);
+  expect(await repo.fetch(day.date)).toEqual({ day: verified, updatedAt: 1000 });
+  expect(createScheduleRepository(persistence, async () => verified).load()).toEqual({ day: verified, updatedAt: 1000 });
+});
+
 it('rejects malformed and incompatible saved data without crashing', () => {
   const persistence = memory();
   const repo = createScheduleRepository(persistence, async () => day);

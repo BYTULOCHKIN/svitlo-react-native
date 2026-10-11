@@ -1,0 +1,14 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "svitlo-notifications-storage-benchmark",
+  "main": "gateway-worker.ts",
+  "compatibility_date": "2026-10-11",
+  "workers_dev": true,
+  "d1_databases": [{
+    "binding": "DB",
+    "database_name": "svitlo-notifications-benchmark",
+    "database_id": "65119682-1f27-4a33-a4d0-978318eb34a0",
+    "migrations_dir": "migrations"
+  }],
+  "observability": { "enabled": true }
+}
