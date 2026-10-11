@@ -4,8 +4,8 @@ import 'tsx/cjs';
 import Env from './env';
 import { metrics, palette } from './src/design-system/tokens';
 
-const EXPO_ACCOUNT_OWNER = process.env.EXPO_ACCOUNT_OWNER;
-const EAS_PROJECT_ID = process.env.EAS_PROJECT_ID;
+const EXPO_ACCOUNT_OWNER = process.env.EXPO_ACCOUNT_OWNER ?? 'ruslan_krasiuk';
+const EAS_PROJECT_ID = process.env.EAS_PROJECT_ID ?? '3a8364d1-dd8b-40e0-bdc2-645cb69a6c50';
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,

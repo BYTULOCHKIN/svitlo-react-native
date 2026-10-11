@@ -1,6 +1,6 @@
 # Перевірка задачі 02
 
-Статус: прототип розгорнуто у власному Cloudflare акаунті; /health і remote API/D1 smoke PASS. Реальний push на Samsung та Cloudflare Free gate очікують Expo/EAS/FCM, пристрою й вимірювань. iOS не перевірено. Платний тариф не вмикається автоматично.
+Статус: прототип розгорнуто у власному Cloudflare акаунті; /health і remote API/D1 smoke PASS. Власний EAS проєкт і Android Firebase конфігурацію підключено. Реальний push на Samsung та Cloudflare Free gate очікують FCM service account/key, пристрою й вимірювань. iOS не перевірено. Платний тариф не вмикається автоматично.
 
 ## Підготовлена реалізація
 
@@ -35,7 +35,13 @@ Smoke реєструє тестову інсталяцію, перевіряє D
 
 ## Власні акаунти й Android
 
-11 жовтня 2026 року перевірено локальні CLI: EAS повідомляє `Not logged in`, Firebase — `No authorized accounts`. Проєкти й FCM credentials ще не створено та не підключено. Expo Notifications і відповідний plugin уже встановлено; `app.config.ts` підтримує `EXPO_ACCOUNT_OWNER`, `EAS_PROJECT_ID` і `GOOGLE_SERVICES_JSON`. Потрібен вхід власника у браузері:
+11 жовтня 2026 року після входу власника створено й підключено EAS проєкт [@ruslan_krasiuk/svitlo-rn](https://expo.dev/accounts/ruslan_krasiuk/projects/svitlo-rn), UUID `3a8364d1-dd8b-40e0-bdc2-645cb69a6c50`. Публічні owner і project UUID задано в `app.config.ts`, змінні оточення можуть їх перевизначити. У наявному власному Firebase проєкті `svitlode-e9787ac8` зареєстровано Android app `ua.svitlo.rn.development`, app ID `1:1092513709069:android:27541a34446ff9490e2944`. Конфігурацію завантажено в локальний `.credentials/development/google-services.json`; перевірено правильність пакета та відсутність `private_key`. Локальний `.env.local` підключає цей файл і HTTPS адресу Worker.
+
+FCM v1 service account та ключ ще не налаштовано. Автоматична перевірка дозволів відхилила запуск допоміжного скрипта з гілками створення service account, зміни IAM та генерації приватного ключа через відсутність явного погодження точного обсягу. Ці гілки не виконувалися; їх видалено перед окремою перевіркою лише читання. Read-only перевірка підтвердила, що запланованого `svitlo-expo-fcm` account і локального ключа ще немає. Поточні IAM bindings не змінювалися.
+
+Підготовлений наступний крок після явного погодження: у проєкті `svitlode-e9787ac8` створити service account `svitlo-expo-fcm`, надати йому лише `roles/firebasecloudmessaging.admin`, зберігши всі наявні bindings і використавши IAM etag для захисту від конкурентних змін. Згенерувати один JSON-ключ, зберегти в ігнорованій `.credentials/fcm-service-account.json` і завантажити через EAS у credentials для `ua.svitlo.rn.development`. Приватний ключ дозволяє надсилати FCM повідомлення від імені проєкту; він не входить у Git або застосунок. Платний тариф не потрібен для цього налаштування.
+
+Для повторного налаштування на іншому комп’ютері потрібен вхід власника у браузері:
 
 ```powershell
 npx.cmd --yes eas-cli@latest login --browser
@@ -44,7 +50,7 @@ npx.cmd --yes firebase-tools@latest login
 
 Вхід виконується у власні акаунти. Якщо акаунта Expo ще немає, його можна створити на [expo.dev/signup](https://expo.dev/signup); Firebase використовує Google-акаунт. Firebase CLI може запропонувати участь у діагностиці — вона не потрібна для FCM. Команди й спосіб входу звірено з [EAS CLI](https://docs.expo.dev/eas/cli/) та [Firebase CLI](https://firebase.google.com/docs/cli).
 
-Після входу перевірити наявні проєкти перед створенням нових. Для EAS використовується slug `svitlo-rn`; динамічний `app.config.ts` читає owner і project UUID зі змінних оточення, тому їх потрібно зберегти вручну у локальному `.env.local` за прикладом [`.env.local.example`](../../.env.local.example). Приклад містить адресу вже розгорнутого Worker. UUID отримати з власного EAS проєкту; порожні поля прикладу не є готовими credentials.
+Після входу підключити наявні проєкти. Для EAS використовується slug `svitlo-rn`; динамічний `app.config.ts` уже містить власні публічні owner і project UUID. Локальні налаштування можна задати у `.env.local` за прикладом [`.env.local.example`](../../.env.local.example); приклад містить адресу вже розгорнутого Worker і поточні EAS ідентифікатори.
 
 Для Firebase достатньо Spark plan: [Cloud Messaging має позначку No-cost](https://firebase.google.com/pricing). APK пілота можна зібрати локально; [Expo підтримує push із локальною native збіркою](https://docs.expo.dev/push-notifications/push-notifications-setup/), а FCM credentials при цьому потрібно налаштувати в EAS окремо.
 
@@ -64,6 +70,8 @@ Firebase конфігурація має відповідати пакету п�
 Для завантаження ключа запустити `npx.cmd --yes eas-cli@latest credentials --platform android`, обрати профіль `development`, потім Google Service Account → Manage your Google Service Account Key for Push Notifications (FCM V1) → Set up → Upload a new service account key. Альтернатива: власний EAS project → Credentials → Android → application identifier `ua.svitlo.rn.development` → Service Credentials → FCM V1 service account key. Якщо використовується наявний service account, звірити роль Firebase Cloud Messaging API Admin. Папка `.credentials/` та `.env*.local` ігноруються Git; приватний ключ не надсилається в чат.
 
 Після підключення перевірити resolved Expo config: правильні `owner`, `extra.eas.projectId`, `android.package` та `android.googleServicesFile`. Перебудувати й установити APK, бо зміна JavaScript не додає Firebase конфігурацію у вже зібраний Android застосунок. Реальний push вважається підтвердженим лише після показу на закритому Samsung і переходу до відповідної картки історії.
+
+Фактичні перевірки цього налаштування: resolved Expo config PASS, Firebase project/package match PASS, Android Google Services plugin і native конфігурація присутні. `prebuild:development -- --platform android --no-install` PASS; `app:assembleDebug --no-daemon` PASS за 4 хв 18 с, APK — `android/app/build/outputs/apk/debug/app-debug.apk`. TypeScript і lint PASS; 30 Jest suites / 142 tests PASS. EAS read-only перевірка підтвердила відсутність FCM v1 credentials. `adb devices -l` повернув порожній список, тому встановлення APK й реальний push ще не перевірено.
 
 1. Створити або підключити власний Expo/EAS проєкт; задати `EXPO_ACCOUNT_OWNER` та `EAS_PROJECT_ID`. Чужий шаблонний проєкт не використовується.
 2. У власному Firebase додати Android application ID профілю збірки: `ua.svitlo.rn.development` для development. `GOOGLE_SERVICES_JSON` вказує на локальний `google-services.json`; файл і credentials не комітяться.
