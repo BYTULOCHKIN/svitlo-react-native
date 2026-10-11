@@ -15,9 +15,9 @@
 
 ## Запуск Render Free
 
-Поточний `origin` посилається на чужий upstream-шаблон. Потрібен власний приватний Git-репозиторій з поточною гілкою `feat/svitlo-migration`. Render ще не розгорнуто: доступ до акаунта та URL репозиторію не надані.
+Код розміщується у власному [GitHub-репозиторії](https://github.com/BYTULOCHKIN/svitlo-react-native) на гілці `main`. Render ще не розгорнуто; наступний крок — підключити цей репозиторій через Dashboard.
 
-1. Підключити власний репозиторій у Render через **New → Blueprint**, вибравши гілку з кореневим [render.yaml](../../render.yaml).
+1. Підключити цей репозиторій у Render через **New → Blueprint**, вибравши гілку `main` з кореневим [render.yaml](../../render.yaml).
 2. Blueprint створює `svitlo-backend-pilot`, **Web Service / Node / Free / Frankfurt**, Node `24.21.0`. Поле Root Directory залишити порожнім: збірка потребує спільних файлів із кореня репозиторію.
 3. Build Command: `npm ci --prefix server/schedule-relay && npm run build --prefix server/schedule-relay`. Start Command: `npm start --prefix server/schedule-relay`. Health Check Path: `/health`. Кореневі Expo-залежності не встановлюються.
 4. У Render задати серверні змінні:
