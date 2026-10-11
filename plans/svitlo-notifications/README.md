@@ -2,7 +2,7 @@
 
 Дата: 11 жовтня 2026 року.
 
-Статус: поділ на 15 задач погоджено. Реалізацію не розпочато; першою готова до роботи задача 01.
+Статус: поділ на 15 задач погоджено. Задача 01 реалізована й пройшла локальні перевірки; native-сценарій очікує підключення Samsung. Наступна — 02: реальний push та перевірка безкоштовного кандидата.
 
 Джерело: [PRD](../svitlo-notifications.prd.md). [Погоджене розбиття та критерії](../svitlo-notifications.issues-proposal.md).
 
@@ -12,8 +12,8 @@ AFK — реалізація автономно за погодженими ви
 
 | № | Задача | Тип | Залежить від | User stories | Статус |
 | --- | --- | --- | --- | --- | --- |
-| 01 | [Пілот: серверна подія → історія без акаунта](./01-installation-history-pilot.issue.md) | AFK | — | 21, 22, 32, 34 | Готова до роботи |
-| 02 | [Реальний push і перевірка безкоштовної платформи](./02-real-push-free-platform-pilot.issue.md) | HITL | [01](./01-installation-history-pilot.issue.md) | 2, 17, 18, 19, 20, 22, 26, 37, 38 | Не почато |
+| 01 | [Пілот: серверна подія → історія без акаунта](./01-installation-history-pilot.issue.md) | AFK | — | 21, 22, 32, 34 | Реалізовано; локальні перевірки PASS |
+| 02 | [Реальний push і перевірка безкоштовної платформи](./02-real-push-free-platform-pilot.issue.md) | HITL | [01](./01-installation-history-pilot.issue.md) | 2, 17, 18, 19, 20, 22, 26, 37, 38 | Готова до роботи; потрібні доступи й пристрій |
 | 03 | [Щохвилинні публікації графіків на сьогодні й завтра](./03-schedule-publications.issue.md) | AFK | [02](./02-real-push-free-platform-pilot.issue.md) | 9, 10, 16, 21, 23, 36 | Не почато |
 | 04 | [Регіональні зміни графіка: push та історія](./04-regional-schedule-changes.issue.md) | AFK | [03](./03-schedule-publications.issue.md) | 10, 11, 14, 16, 21, 36 | Не почато |
 | 05 | [Незалежний перемикач push про графіки](./05-regional-push-preference.issue.md) | AFK | [04](./04-regional-schedule-changes.issue.md) | 12, 13 | Не почато |

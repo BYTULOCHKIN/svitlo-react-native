@@ -93,6 +93,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       },
     ],
     'expo-localization',
+    'expo-secure-store',
     'expo-router',
     ['react-native-edge-to-edge'],
   ],

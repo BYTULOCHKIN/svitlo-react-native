@@ -1,0 +1,14 @@
+appId: ${APP_ID}
+---
+- launchApp:
+    clearState: false
+- openLink: ${DEV_URL}
+- extendedWaitUntil:
+    visible: ЄСвітло
+    timeout: 60000
+- tapOn: Сповіщення
+- extendedWaitUntil:
+    visible: Опубліковано графік
+    timeout: 30000
+- assertVisible: 'Графік на 10 жовтня 2026.*'
+- takeScreenshot: notifications-publication

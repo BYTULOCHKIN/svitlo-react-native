@@ -1,0 +1,22 @@
+appId: ${APP_ID}
+---
+- launchApp:
+    clearState: false
+- openLink: ${DEV_URL}
+- extendedWaitUntil:
+    visible: ЄСвітло
+    timeout: 60000
+- openLink: ${RESET_URL}
+- extendedWaitUntil:
+    visible: Обрати чергу
+    timeout: 30000
+- tapOn: Обрати чергу
+- extendedWaitUntil:
+    visible: Черга 1.1
+    timeout: 30000
+- tapOn: Черга 1.1
+- tapOn: Сповіщення
+- extendedWaitUntil:
+    visible: 'Сповіщень поки немає.*'
+    timeout: 30000
+- takeScreenshot: notifications-empty
