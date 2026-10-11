@@ -23,7 +23,7 @@ export function ScheduleTimeline({ view }: { view: ScheduleView }) {
             </View>
             <View style={styles.content}>
               <View style={styles.timeRow}>
-                <Text style={interval.isCurrent ? typography.emphasis : typography.body}>{`${formatMinute(interval.start)} — ${formatMinute(interval.end)}`}</Text>
+                <Text style={[interval.isCurrent ? typography.emphasis : typography.body, { flexShrink: 1, maxWidth: '100%' }]}>{`${formatMinute(interval.start)} — ${formatMinute(interval.end)}`}</Text>
                 {interval.isCurrent && (
                   <View style={[styles.badge, { backgroundColor: theme.badge }]}>
                     <Text style={[typography.timelineBadge, { color: theme.color }]}>ЗАРАЗ</Text>

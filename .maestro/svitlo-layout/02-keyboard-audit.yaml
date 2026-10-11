@@ -1,0 +1,3 @@
+appId: ${APP_ID}
+---
+- runFlow: ../svitlo/02-keyboard-and-close.yaml

@@ -95,6 +95,8 @@ export const metrics = {
   queueMinWidth: '29%' as const,
   iconChoiceWidth: '17%' as const,
   dialogMaxHeight: '90%' as const,
+  dialogMaxWidth: 560,
+  dialogCompactHeight: 500,
   pickerMaxHeight: '80%' as const,
   timerStackWidth: 350,
   timerStackFontScale: 1.3,

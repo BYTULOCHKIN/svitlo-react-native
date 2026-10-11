@@ -16,6 +16,10 @@ appId: ${APP_ID}
 - tapOn: Назва локації
 - inputText: Draft
 - hideKeyboard
+- scrollUntilVisible:
+    element: Скасувати
+    direction: DOWN
+    timeout: 15000
 - tapOn: Скасувати
 - assertVisible: Відкинути незбережені зміни?
 - tapOn: Продовжити редагування
@@ -27,14 +31,31 @@ appId: ${APP_ID}
 - assertVisible: 'Обрати локацію: Дім, черга 1.1'
 - tapOn: 'Обрати локацію: Дім, черга 1.1'
 - tapOn: Додати локацію
+- scrollUntilVisible:
+    element: Черга 1.2
+    direction: DOWN
+    timeout: 15000
 - tapOn: Черга 1.2
+- scrollUntilVisible:
+    element: Назва локації
+    direction: UP
+    timeout: 15000
 - tapOn: Назва локації
 - inputText: Keyboard
 - takeScreenshot: keyboard-open-form
-- scrollUntilVisible:
-    element: Зберегти
-    direction: DOWN
-    timeout: 15000
+# The keyboard can move the body above the screen midpoint. Start each swipe
+# inside the body so it cannot hit the backdrop or the keyboard instead.
+- repeat:
+    times: 15
+    while:
+      notVisible: Зберегти
+    commands:
+      - swipe:
+          from:
+            id: app-dialog-body
+          direction: UP
+          duration: 500
+- assertVisible: Зберегти
 # Save must work on the first tap with the keyboard still open.
 - tapOn: Зберегти
 - assertVisible: 'Обрати локацію: Keyboard, черга 1.2'

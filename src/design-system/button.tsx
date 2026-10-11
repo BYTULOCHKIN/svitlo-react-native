@@ -58,7 +58,7 @@ export function ActionButton({ children, onPress, secondary = false, disabled = 
 }
 
 const styles = StyleSheet.create({
-  button: { minHeight: metrics.touchTarget, minWidth: metrics.touchTarget, paddingHorizontal: space.lg, paddingVertical: space.md, borderRadius: radius.control, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: space.sm, borderWidth: metrics.hairline, borderColor: palette.transparent },
+  button: { minHeight: metrics.touchTarget, minWidth: metrics.touchTarget, maxWidth: '100%', paddingHorizontal: space.lg, paddingVertical: space.md, borderRadius: radius.control, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: space.sm, borderWidth: metrics.hairline, borderColor: palette.transparent },
   iconButton: { padding: space.md },
   focus: { borderColor: palette.text },
 });

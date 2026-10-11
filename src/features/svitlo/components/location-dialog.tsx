@@ -2,6 +2,7 @@ import type { TextInput } from 'react-native';
 import type { Location, LocationIcon } from '../models';
 import { useRef, useState } from 'react';
 import { AppButton } from '@/design-system/button';
+import { AppButtonGroup } from '@/design-system/button-group';
 import { AppConfirmDialogBody } from '@/design-system/confirm-dialog';
 import { AppDialog } from '@/design-system/dialog';
 import { useDialogFocus } from '@/design-system/dialog-focus';
@@ -72,21 +73,10 @@ export function LocationDialog({ location, queues, onClose }: Props) {
       title={confirmation === 'discard' ? 'Відкинути незбережені зміни?' : confirmation === 'delete' ? 'Видалити локацію?' : location ? 'Редагувати локацію' : 'Нова локація'}
       onRequestClose={requestClose}
       footer={!confirmation && (
-        <>
-          {location && (
-            <AppButton
-              variant="ghost"
-              onPress={() => {
-                setError('');
-                setConfirmation('delete');
-              }}
-            >
-              Видалити локацію
-            </AppButton>
-          )}
+        <AppButtonGroup>
           <AppButton variant="ghost" onPress={requestClose}>Скасувати</AppButton>
           <AppButton disabled={!valid} onPress={save}>Зберегти</AppButton>
-        </>
+        </AppButtonGroup>
       )}
     >
       {confirmation
@@ -107,6 +97,17 @@ export function LocationDialog({ location, queues, onClose }: Props) {
               <AppInput ref={nameRef} label="Назва локації" value={name} onChangeText={setName} onBlur={() => setTouched(true)} maxLength={20} placeholder="Наприклад, Дім" helperText="Назва обов’язкова, до 20 символів." error={touched && !name.trim() ? 'Вкажіть назву локації.' : undefined} />
               <LocationChoices queues={choices} queue={queue} onQueueChange={setQueue} icon={icon} onIconChange={setIcon} />
               {!!error && <AppText tone="danger" accessibilityRole="alert" accessibilityLiveRegion="polite">{error}</AppText>}
+              {location && (
+                <AppButton
+                  variant="ghost"
+                  onPress={() => {
+                    setError('');
+                    setConfirmation('delete');
+                  }}
+                >
+                  Видалити локацію
+                </AppButton>
+              )}
             </>
           )}
     </AppDialog>

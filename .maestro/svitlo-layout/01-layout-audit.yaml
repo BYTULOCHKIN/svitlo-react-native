@@ -1,0 +1,52 @@
+appId: ${APP_ID}
+---
+- launchApp
+- openLink: ${DEV_URL}
+- extendedWaitUntil:
+    visible: ЄСвітло
+    timeout: 60000
+- openLink: ${RESET_URL}
+- extendedWaitUntil:
+    visible: Світло за вашою адресою
+    timeout: 10000
+- takeScreenshot: onboarding
+- tapOn: Обрати чергу
+- takeScreenshot: queue-picker
+- scrollUntilVisible:
+    element: Черга 6.2
+    direction: DOWN
+- tapOn: Черга 6.2
+- takeScreenshot: home
+- tapOn: Черги
+- takeScreenshot: queues
+- tapOn: Головна
+- tapOn: 'Обрати локацію: Дім, черга 6.2'
+- takeScreenshot: location-picker
+- tapOn: Додати локацію
+- tapOn: Назва локації
+- inputText: WWWWWWWWWWWWWWWWWWWW
+- hideKeyboard
+- takeScreenshot: form-top
+- scrollUntilVisible:
+    element: Черга 6.2
+    direction: DOWN
+- tapOn: Черга 6.2
+- scrollUntilVisible:
+    element: Зберегти
+    direction: DOWN
+- takeScreenshot: form-actions
+- tapOn: Зберегти
+- assertVisible: 'Обрати локацію: WWWWWWWWWWWWWWWWWWWW, черга 6.2'
+- takeScreenshot: long-name-home
+- tapOn: 'Обрати локацію: WWWWWWWWWWWWWWWWWWWW, черга 6.2'
+- takeScreenshot: long-name-picker
+- tapOn: Редагувати WWWWWWWWWWWWWWWWWWWW
+- scrollUntilVisible:
+    element: Видалити локацію
+    direction: DOWN
+- takeScreenshot: edit-actions
+- tapOn: Видалити локацію
+- takeScreenshot: delete-confirmation
+- tapOn: Скасувати
+- tapOn: Закрити діалог
+- assertVisible: 'Обрати локацію: WWWWWWWWWWWWWWWWWWWW, черга 6.2'

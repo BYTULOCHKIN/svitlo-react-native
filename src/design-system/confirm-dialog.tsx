@@ -1,11 +1,10 @@
 import type { View } from 'react-native';
 import { useRef } from 'react';
-import { View as NativeView, StyleSheet } from 'react-native';
 import { AppButton } from './button';
+import { AppButtonGroup } from './button-group';
 import { AppDialog } from './dialog';
 import { useDialogFocus } from './dialog-focus';
 import { AppText } from './text';
-import { space } from './tokens';
 
 export type ConfirmationProps = {
   message: string;
@@ -26,10 +25,10 @@ export function AppConfirmDialogBody({ message, cancelLabel, confirmLabel, onCan
     <>
       <AppText>{message}</AppText>
       {!!error && <AppText tone="danger" accessibilityRole="alert" accessibilityLiveRegion="polite">{error}</AppText>}
-      <NativeView style={styles.actions}>
+      <AppButtonGroup>
         <AppButton ref={cancelRef} variant="secondary" accessibilityHint={message} onPress={onCancel}>{cancelLabel}</AppButton>
         <AppButton variant={danger ? 'danger' : 'primary'} onPress={onConfirm}>{confirmLabel}</AppButton>
-      </NativeView>
+      </AppButtonGroup>
     </>
   );
 }
@@ -37,5 +36,3 @@ export function AppConfirmDialogBody({ message, cancelLabel, confirmLabel, onCan
 export function AppConfirmDialog({ open, title, ...props }: ConfirmationProps & { open: boolean; title: string }) {
   return <AppDialog open={open} title={title} onRequestClose={props.onCancel}><AppConfirmDialogBody {...props} /></AppDialog>;
 }
-
-const styles = StyleSheet.create({ actions: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'flex-end', gap: space.sm } });

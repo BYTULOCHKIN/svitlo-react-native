@@ -39,13 +39,16 @@ export function LocationSelector({ queues }: { queues: string[] }) {
       <Modal visible={expanded} transparent animationType="fade" onRequestClose={() => setExpanded(false)}>
         <SafeAreaView style={{ flex: 1, backgroundColor: palette.overlay, padding: space.lg, justifyContent: 'center' }}>
           <Pressable android_ripple={{ color: palette.pressed }} accessibilityRole="button" accessibilityLabel="Закрити вибір локації" onPress={() => setExpanded(false)} style={{ position: 'absolute', inset: 0 }} />
-          <View accessibilityViewIsModal style={{ backgroundColor: palette.card, borderRadius: radius.dialog, padding: space.sm, maxHeight: metrics.pickerMaxHeight }}>
-            <ScrollView>
+          <View accessibilityViewIsModal style={{ backgroundColor: palette.card, borderRadius: radius.dialog, padding: space.sm, maxHeight: metrics.pickerMaxHeight, maxWidth: metrics.dialogMaxWidth, width: '100%', alignSelf: 'center', overflow: 'hidden' }}>
+            <ScrollView keyboardShouldPersistTaps="handled">
               {locations.map(location => (
-                <View key={location.id} style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: location.id === selectedId ? palette.selected : palette.transparent }}>
-                  <Pressable android_ripple={{ color: palette.pressed }} accessibilityRole="button" accessibilityLabel={`Локація ${location.name}, черга ${location.queue}`} accessibilityState={{ selected: location.id === selectedId }} onPress={() => choose(location.id)} style={{ flex: 1, flexDirection: 'row', gap: space.md, padding: space.lg }}>
+                <View key={location.id} style={{ flexDirection: 'row', alignItems: 'center', borderRadius: radius.control, backgroundColor: location.id === selectedId ? palette.selected : palette.transparent }}>
+                  <Pressable android_ripple={{ color: palette.pressed }} accessibilityRole="button" accessibilityLabel={`Локація ${location.name}, черга ${location.queue}`} accessibilityState={{ selected: location.id === selectedId }} onPress={() => choose(location.id)} style={{ flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: space.md, padding: space.lg }}>
                     <SvitloIcon name={location.icon} color={palette.green} />
-                    <Text style={{ flex: 1, minWidth: 0 }}>{`${location.name} (${location.queue})`}</Text>
+                    <View style={{ flex: 1, minWidth: 0, gap: space.xxs }}>
+                      <Text variant="emphasis">{location.name}</Text>
+                      <Text variant="caption" tone="secondary">{`Черга ${location.queue}`}</Text>
+                    </View>
                   </Pressable>
                   <Pressable
                     android_ripple={{ color: palette.pressed }}
@@ -68,10 +71,10 @@ export function LocationSelector({ queues }: { queues: string[] }) {
                   setExpanded(false);
                   setEditing(null);
                 }}
-                style={{ flexDirection: 'row', gap: space.md, padding: space.lg }}
+                style={{ flexDirection: 'row', alignItems: 'center', gap: space.md, padding: space.lg }}
               >
                 <SvitloIcon name="plus" color={palette.green} />
-                <Text style={{ color: palette.green }}>Додати локацію</Text>
+                <Text style={{ color: palette.green, flex: 1, minWidth: 0 }}>Додати локацію</Text>
               </Pressable>
             </ScrollView>
           </View>
