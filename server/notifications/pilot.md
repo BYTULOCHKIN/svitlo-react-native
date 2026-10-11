@@ -1,6 +1,6 @@
 # Перевірка задачі 02
 
-Статус: прототип розгорнуто у власному Cloudflare акаунті; /health і remote API/D1 smoke PASS. Власний EAS проєкт і Android Firebase конфігурацію підключено. Реальний push на Samsung та Cloudflare Free gate очікують FCM service account/key, пристрою й вимірювань. iOS не перевірено. Платний тариф не вмикається автоматично.
+Статус: прототип розгорнуто у власному Cloudflare акаунті; /health і remote API/D1 smoke PASS. Власні EAS, Firebase Android і FCM v1 credentials підключено; APK встановлено на Samsung. Реальний push показано на пристрої, Expo receipt — `ok`. Cloudflare Free gate не пройдено: отримання графіка з Cloudflare завершується таймаутом. Повний fan-out на 100 інсталяцій та iOS не перевірено. Платний тариф не вмикався.
 
 ## Підготовлена реалізація
 
@@ -37,9 +37,7 @@ Smoke реєструє тестову інсталяцію, перевіряє D
 
 11 жовтня 2026 року після входу власника створено й підключено EAS проєкт [@ruslan_krasiuk/svitlo-rn](https://expo.dev/accounts/ruslan_krasiuk/projects/svitlo-rn), UUID `3a8364d1-dd8b-40e0-bdc2-645cb69a6c50`. Публічні owner і project UUID задано в `app.config.ts`, змінні оточення можуть їх перевизначити. У наявному власному Firebase проєкті `svitlode-e9787ac8` зареєстровано Android app `ua.svitlo.rn.development`, app ID `1:1092513709069:android:27541a34446ff9490e2944`. Конфігурацію завантажено в локальний `.credentials/development/google-services.json`; перевірено правильність пакета та відсутність `private_key`. Локальний `.env.local` підключає цей файл і HTTPS адресу Worker.
 
-FCM v1 service account та ключ ще не налаштовано. Автоматична перевірка дозволів відхилила запуск допоміжного скрипта з гілками створення service account, зміни IAM та генерації приватного ключа через відсутність явного погодження точного обсягу. Ці гілки не виконувалися; їх видалено перед окремою перевіркою лише читання. Read-only перевірка підтвердила, що запланованого `svitlo-expo-fcm` account і локального ключа ще немає. Поточні IAM bindings не змінювалися.
-
-Підготовлений наступний крок після явного погодження: у проєкті `svitlode-e9787ac8` створити service account `svitlo-expo-fcm`, надати йому лише `roles/firebasecloudmessaging.admin`, зберігши всі наявні bindings і використавши IAM etag для захисту від конкурентних змін. Згенерувати один JSON-ключ, зберегти в ігнорованій `.credentials/fcm-service-account.json` і завантажити через EAS у credentials для `ua.svitlo.rn.development`. Приватний ключ дозволяє надсилати FCM повідомлення від імені проєкту; він не входить у Git або застосунок. Платний тариф не потрібен для цього налаштування.
+Після явного погодження користувача створено service account `svitlo-expo-fcm@svitlode-e9787ac8.iam.gserviceaccount.com` і надано лише `roles/firebasecloudmessaging.admin`. Усі попередні IAM bindings збережено; запис захищено etag та перевірено повторним читанням. Згенеровано один JSON-ключ в ігнорованій `.credentials/fcm-service-account.json`; через EAS його прив’язано до FCM v1 credentials для `ua.svitlo.rn.development`. Перевірено збіг власного проєкту, service account і key ID. Приватний ключ не входить у Git, застосунок або звіт. Preview/production credentials та APNs не налаштовані.
 
 Для повторного налаштування на іншому комп’ютері потрібен вхід власника у браузері:
 
@@ -71,7 +69,7 @@ Firebase конфігурація має відповідати пакету п�
 
 Після підключення перевірити resolved Expo config: правильні `owner`, `extra.eas.projectId`, `android.package` та `android.googleServicesFile`. Перебудувати й установити APK, бо зміна JavaScript не додає Firebase конфігурацію у вже зібраний Android застосунок. Реальний push вважається підтвердженим лише після показу на закритому Samsung і переходу до відповідної картки історії.
 
-Фактичні перевірки цього налаштування: resolved Expo config PASS, Firebase project/package match PASS, Android Google Services plugin і native конфігурація присутні. `prebuild:development -- --platform android --no-install` PASS; `app:assembleDebug --no-daemon` PASS за 4 хв 18 с, APK — `android/app/build/outputs/apk/debug/app-debug.apk`. TypeScript і lint PASS; 30 Jest suites / 142 tests PASS. EAS read-only перевірка підтвердила відсутність FCM v1 credentials. `adb devices -l` повернув порожній список, тому встановлення APK й реальний push ще не перевірено.
+Фактичні перевірки цього налаштування: resolved Expo config PASS, Firebase project/package match PASS, Android Google Services plugin і native конфігурація присутні. `prebuild:development -- --platform android --no-install` PASS; `app:assembleDebug --no-daemon` PASS за 4 хв 18 с, APK — `android/app/build/outputs/apk/debug/app-debug.apk`. Після перепідключення Samsung USB shell працює; `adb install -r` завершився успішно. EAS read-only перевірка підтвердила призначені FCM v1 credentials. TypeScript і lint PASS; 31 Jest suites / 147 tests PASS.
 
 1. Створити або підключити власний Expo/EAS проєкт; задати `EXPO_ACCOUNT_OWNER` та `EAS_PROJECT_ID`. Чужий шаблонний проєкт не використовується.
 2. У власному Firebase додати Android application ID профілю збірки: `ua.svitlo.rn.development` для development. `GOOGLE_SERVICES_JSON` вказує на локальний `google-services.json`; файл і credentials не комітяться.
@@ -81,7 +79,7 @@ Firebase конфігурація має відповідати пакету п�
 
 ## Cloudflare та фактичний gate
 
-11 жовтня 2026 року в `wrangler.jsonc` підключено створену користувачем D1 через прив’язку `DB`, обидві віддалені міграції застосовано. Код Worker розгорнуто на https://svitlo-notifications-pilot.svitlonorify.workers.dev, version `820c41a9-c27b-4d9e-811d-676fe3b99374`. `PILOT_RUN_TOKEN` збережено після розгортання; значення секрету не читалося. Cron `* * * * *` зареєстровано; успішний scheduled invocation і доступ до джерела ще потребують окремого підтвердження.
+11 жовтня 2026 року в `wrangler.jsonc` підключено створену користувачем D1 через прив’язку `DB`, обидві віддалені міграції застосовано. Код Worker розгорнуто на https://svitlo-notifications-pilot.svitlonorify.workers.dev, version `820c41a9-c27b-4d9e-811d-676fe3b99374`. `PILOT_RUN_TOKEN` збережено після розгортання; значення секрету не читалося. Реальні scheduled invocations cron `* * * * *` спостерігалися через Wrangler tail. Вони завершуються `ok`, але `sourceValid=false`: успішний invocation не означає успішне отримання графіка.
 
 Початкову помилку налаштування усунуто: автоматично додана друга D1-прив’язка мала реальний ID, тоді як `DB` залишалася з нульовим ID. Їх об’єднано в одну коректну `DB`. До виправлення створена база не мала таблиць; додавання секрету створило Worker без розгортання коду застосунку.
 
@@ -97,18 +95,34 @@ Firebase конфігурація має відповідати пакету п�
 
 ## Результати
 
+### Samsung та реальна доставка, 11 жовтня 2026
+
+Samsung SM-S928U1, Android 16: development APK установлено зі збереженням даних. Metro працював з ізольованим E2E-сховищем та реальною HTTPS адресою Worker; звичайне сховище не очищувалося. Maestro `01-empty-history.yaml` пройшов. Очікування готовності замінено з назви на splash на фактичний екран вибору черги або вкладку. Опційне закриття пояснення дозволу в цьому flow іноді потребує повтору через затримку появи діалогу; це не автоматизований тест усіх permission-сценаріїв.
+
+Знайдено й виправлено native-помилку: Expo Android повертав `denied` разом із `canAskAgain=true` ще до першого системного запиту. Адаптер тепер відрізняє перший запит від відмови, зберігаючи факт явного запиту в локальному сховищі. Початкове інспектування не відкриває системний діалог. Після «Увімкнути сповіщення» на Samsung спостерігався системний запит, після дозволу — реальний Expo token у D1. Додано п’ять regression-тестів для початкового Android стану, явного запиту й відмови, дозволу й реєстрації, неможливості повторного запиту та iOS denial. Натискання «Не дозволяти» у початковому системному діалозі окремо не підтверджено; native-відмову перевірено вимкненням у налаштуваннях ОС.
+
+Публікація поточного живого графіка за `2026-10-11` із 12 чергами створена атомарно в реальній remote D1: 3 SQL, 19 rows read, 26 rows written, dbMs 1.0504. Через збій доступу з Cloudflare графік для цього тесту отримано локальним приватним authenticated helper із remote D1 binding. Це не проходження розгорнутого `POST /pilot/publication`; наявний `PILOT_RUN_TOKEN` не читався й не змінювався. Розсилку outbox виконав саме розгорнутий cron: attempted 1, accepted 1, 5 SQL, 34 rows read, 4 rows written, CPU 7 ms, wallTime 15913 ms. Expo receipt `ok`; у системній шторці Samsung фактично показано «Опубліковано графік» із датою 2026-10-11. Натискання відкрило й виділило відповідну картку «Графік на 11 жовтня 2026».
+
+Окремо перевірено холодне відкриття: debug-процес завершено під його власним UID без Android force-stop; до надсилання PID відсутній. Один прямий Expo test push «Перевірка відкриття графіка» повторно посилався на вже існуючу картку. Цей тест не створював подію й не змінював outbox. Після натискання запустився новий процес, відкрилася картка з accessibility label «Сповіщення, яке ви відкрили»; receipt `ok`. Це додатковий тест навігації, а не друга cron-публікація.
+
+Кнопка «Налаштування телефона» відкрила системні налаштування ЄСвітло. Після вимкнення дозволу та повернення показано фактичний denied-стан, картка історії залишилася доступною, push token видалено з remote D1. Після повторного ввімкнення і повернення показано granted-стан і токен зареєстровано знову. Дозвіл залишено ввімкненим. iOS, APNs, TalkBack/VoiceOver та foreground-показ окремо не перевірені.
+
+### Джерело з Cloudflare та межі вимірювання
+
+Повторні фактичні cron-виклики завершилися `sourceValid=false` за приблизно 15.5 с; CPU 3–4 ms при порожньому outbox. Локальний виклик того самого валідатора успішно отримав поточний графік за 279 ms. Окрема read-only Cloudflare remote preview перевірка головної HTTPS сторінки, POST `newgpv-info.php` з www, без www та через HTTP дала TimeoutError за 7 с для кожного URL. Причину недоступності не встановлено; блокування IP обленерго є лише можливою причиною.
+
+Виміряні 7 ms для одного одержувача включають невдалу перевірку джерела та успішну розсилку. Вони не доводять укладання повного парсингу таблиці й розсилки на 100 інсталяцій у 10 ms Free CPU. За відсутності подій 1440 cron-викликів означають приблизно 4320 SQL на добу; з фактичними 4 rows read на останніх порожніх викликах — 5760 rows read. Це лише поточний пілот із п’ятьма тестовими інсталяціями, не прогноз для 100 користувачів. Повний cloud fan-out і його квоти залишаються неперевіреними. Жодного платного тарифу або нового інфраструктурного сервісу не ввімкнено.
+
 | Перевірка | Локально | Cloudflare / пристрій |
 | --- | --- | --- |
-| Дозвіл, відмова, OS settings, push navigation | Jest PASS | Samsung очікується |
+| Дозвіл, відмова, OS settings, push navigation | Jest PASS, 5 нових native adapter regression-тестів | Samsung: запит, grant, settings denial, повторний grant та tap PASS; початковий OS deny не перевірено |
 | Auth, міграції, історія через Worker/D1 | workerd HTTP smoke PASS | Remote smoke PASS; обидві міграції застосовано |
-| Реальне джерело з локального workerd | `sourceValid=true`; cron `wallMs=328`, 3 SQL | Доступ із Cloudflare не перевірено |
+| Реальне джерело | workerd `sourceValid=true`; Node — 279 ms, 12 черг | FAIL: cron та альтернативні URL у remote preview завершуються таймаутом |
 | 100 одержувачів, один REST-запит, без дублів | SQLite integration PASS; публікація + розсилка = 8 SQL; Expo transport підмінений | Не виконано |
-| Worker bundle, Android APK | Wrangler dry-run, assembleDebug PASS | Worker розгорнуто; /health 200 `{"ok":true}`; Samsung очікується |
-| CPU, квоти D1, добовий бюджет | Локальні значення не доказ | Не виміряно |
-| Реальний показ / tap / cold launch | Код і unit-тести підготовлені | Samsung потребує стабільного USB-з’єднання |
+| Worker bundle, Android APK | Wrangler dry-run, assembleDebug PASS | Worker розгорнуто; /health 200 `{"ok":true}`; APK встановлено |
+| CPU, квоти D1, добовий бюджет | Локальні значення не доказ | Один push: 7 ms CPU, 5 SQL; повне джерело й 100 одержувачів не виміряно |
+| Реальний показ / tap / cold launch | Unit-тести PASS | Cron push показано й відкрито; окремий прямий Expo replay підтвердив cold launch; обидва receipts `ok` |
 
-Перевірки застосунку: TypeScript і lint PASS; 30 Jest suites / 142 tests PASS; 14 серверних інтеграційних тестів PASS; design:check і 31 contrast combinations PASS. Існуюче попередження `act` у тесті login-form не є помилкою push. Android `assembleDebug` PASS; iOS і screen reader не перевірено.
+Перевірки застосунку: TypeScript і lint PASS; 31 Jest suites / 147 tests PASS. Раніше пройдені 14 серверних інтеграційних тестів, design:check і 31 contrast combinations; цього кроку серверний production-код і дизайн не змінювалися. Існуюче попередження `act` у тесті login-form не є помилкою push. Android `assembleDebug` та встановлення APK PASS; iOS і screen reader не перевірено.
 
-Спроба native-перевірки: Samsung `R5CX30FC4SH` з’явився як `device` у ADB, але встановлення APK й Maestro не отримали відповіді. Окрема проста shell-команда перевищила таймаут 15 секунд. Власні завислі процеси зупинено; після `adb reconnect` пристрій став недоступним. Встановлення APK та проходження flows не підтверджені. Потрібне перепідключення USB й розблокований телефон; звичайне сховище застосунку не очищувалося.
-
-Висновок gate: **очікує вимірювань**, а не PASS або виміряний FAIL. Задачі 03–15 не починаються до підтвердження 02 або погодженого перегляду архітектури за результатами вимірювання.
+Висновок gate: **FAIL за доступом до джерела з Cloudflare; перевірка 100 одержувачів не завершена**. Android push transport працює, але автоматичне отримання графіків цим Worker зараз не підтверджено й повторно завершується таймаутом. Задачі 03–15 не починаються до виправлення цього шляху й завершення вимірювань або погодженого перегляду архітектури. Сам факт успішного push не завершує задачу 02.

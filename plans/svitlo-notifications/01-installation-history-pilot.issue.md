@@ -2,7 +2,7 @@
 
 Тип: AFK.
 
-Статус: реалізовано; локальні unit, інтеграційні та компонентні перевірки пройдені. Android APK зібрано; native-сценарій на Samsung очікує підключення пристрою.
+Статус: реалізовано; локальні unit, інтеграційні та компонентні перевірки пройдені. Android APK установлено на Samsung; native empty-history PASS, реальну картку історії перевірено в пілоті 02.
 
 Джерело: [PRD](../svitlo-notifications.prd.md). [Погоджене розбиття](../svitlo-notifications.issues-proposal.md).
 
@@ -23,7 +23,7 @@ User stories PRD: 21, 22, 32, 34.
 
 11 жовтня 2026 року: type-check, lint, design:check та всі 31 комбінація design:contrast PASS. Jest: 26 suites / 130 tests PASS; серверний Node runner: 7 integration tests PASS. Перевірено реальну SQLite, захоплений HTML, API, мобільний клієнт, атомарний rollback, власний доступ, відсутність старих подій навіть за однакових timestamps, перезапуск і пагінацію. Компонентні тести підтверджують loading, empty, error/retry, картку та відсутність дублікатів.
 
-Локальний HTTP API відповідає на health. Android development APK із SecureStore зібрано успішно. [Підготовлені native flows](../../.maestro/svitlo-notifications/README.md) не підтверджено: під час спроби запуску Samsung з’явився в ADB, але USB-команди й встановлення APK не відповідали; після перепідключення ADB пристрій став недоступним. Потрібне стабільне USB-з’єднання. iOS, TalkBack/VoiceOver, реальний push та хмарні квоти цією задачею не підтверджені. [Інструкція локального пілота](../../server/notifications/README.md).
+Локальний HTTP API відповідає на health. Android development APK із SecureStore зібрано успішно. Після перепідключення Samsung APK установлено; [native empty-history flow](../../.maestro/svitlo-notifications/README.md) пройшов із реальною HTTPS адресою Worker та ізольованим E2E-сховищем. У задачі 02 додатково перевірено реальну картку публікації та перехід до неї. Окремий fixture flow `02-publication-history.yaml` на цьому кроці не запускався. iOS і TalkBack/VoiceOver не перевірено; реальний push і хмарні квоти описані у [звіті задачі 02](../../server/notifications/pilot.md). [Інструкція локального пілота](../../server/notifications/README.md).
 
 ## Blocked by
 

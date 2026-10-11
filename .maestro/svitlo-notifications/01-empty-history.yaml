@@ -2,10 +2,12 @@ appId: ${APP_ID}
 ---
 - launchApp:
     clearState: false
+    permissions:
+      notifications: unset
 - openLink: ${DEV_URL}
 - extendedWaitUntil:
-    visible: ЄСвітло
-    timeout: 60000
+    visible: 'Обрати чергу|Сповіщення'
+    timeout: 120000
 - openLink: ${RESET_URL}
 - extendedWaitUntil:
     visible: Обрати чергу
