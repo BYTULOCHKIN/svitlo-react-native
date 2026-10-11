@@ -11,7 +11,7 @@
   "scripts": {
     "notifications:local": "node --require tsx/cjs server/notifications/local-server.ts",
     "notifications:fixture": "node --require tsx/cjs server/notifications/publish-fixture.ts",
-    "notifications:test": "node --require tsx/cjs --test server/notifications/integration.node.ts server/notifications/push.integration.node.ts server/notifications/source.integration.node.ts server/notifications/storage.integration.node.ts server/schedule-relay/api.integration.node.ts server/schedule-relay/backend.integration.node.ts",
+    "notifications:test": "node --require tsx/cjs --test server/notifications/integration.node.ts server/notifications/push.integration.node.ts server/notifications/source.integration.node.ts server/notifications/storage.integration.node.ts server/schedule-relay/api.integration.node.ts server/schedule-relay/backend.integration.node.ts server/schedule-relay/source-diagnostics.integration.node.ts",
     "notifications:gateway:check": "wrangler deploy --dry-run --config server/notifications/wrangler.gateway.jsonc --outdir .expo/notifications/gateway-build",
     "notifications:backend:benchmark": "node --require tsx/cjs server/schedule-relay/benchmark-node.ts",
     "notifications:benchmark": "node --require tsx/cjs server/notifications/run-benchmark.ts",

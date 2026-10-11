@@ -2,12 +2,13 @@ import { Buffer } from 'node:buffer';
 import { createServer } from 'node:http';
 import { createHttpDatabase } from '../notifications/http-database';
 import { createBackendApi } from './backend';
+import { createSourceDiagnosticsApi } from './source-diagnostics';
 
-const api = createBackendApi({
+const api = createSourceDiagnosticsApi(process.env.TICK_RUN_TOKEN ?? '', createBackendApi({
   database: createHttpDatabase({ url: process.env.STORAGE_API_URL ?? '', token: process.env.STORAGE_API_TOKEN ?? '' }),
   tickToken: process.env.TICK_RUN_TOKEN ?? '',
   expoAccessToken: process.env.EXPO_ACCESS_TOKEN,
-});
+}));
 const port = Number(process.env.PORT ?? 10000);
 if (!Number.isInteger(port) || port < 1 || port > 65535)
   throw new Error('Invalid PORT');
