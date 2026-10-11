@@ -2,7 +2,7 @@
 
 Дата: 11 жовтня 2026 року.
 
-Статус: поділ на 15 задач погоджено. Задача 01 реалізована; empty-history на Samsung PASS. Пілот 02 розгорнуто, власні EAS/Firebase/FCM підключено; реальний Android push, tap, окремий cold launch та OS settings перевірені. Cloudflare gate FAIL за доступом до обленерго; хмарний fan-out на 100 інсталяцій не виміряно. Задачі 03–15 не почато.
+Статус: поділ на 15 задач погоджено. Задача 01 реалізована; empty-history на Samsung PASS. Пілот 02 розгорнуто, Android push/tap перевірені; синтетичний fan-out на 100 інсталяцій виміряно. Публічний JSON графіка працює; relay підготовлено й перевірено локально. Gate FAIL за прямим джерелом і CPU частини вимірювань; провайдер relay та повний бюджет очікуються. Задачі 03–15 не почато.
 
 Джерело: [PRD](../svitlo-notifications.prd.md). [Погоджене розбиття та критерії](../svitlo-notifications.issues-proposal.md).
 
@@ -13,7 +13,7 @@ AFK — реалізація автономно за погодженими ви
 | № | Задача | Тип | Залежить від | User stories | Статус |
 | --- | --- | --- | --- | --- | --- |
 | 01 | [Пілот: серверна подія → історія без акаунта](./01-installation-history-pilot.issue.md) | AFK | — | 21, 22, 32, 34 | Реалізовано; локальні перевірки та Samsung empty-history PASS |
-| 02 | [Реальний push і перевірка безкоштовної платформи](./02-real-push-free-platform-pilot.issue.md) | HITL | [01](./01-installation-history-pilot.issue.md) | 2, 17, 18, 19, 20, 22, 26, 37, 38 | Android push/tap PASS; gate FAIL: джерело недоступне з Cloudflare; 100 fan-out очікується |
+| 02 | [Реальний push і перевірка безкоштовної платформи](./02-real-push-free-platform-pilot.issue.md) | HITL | [01](./01-installation-history-pilot.issue.md) | 2, 17, 18, 19, 20, 22, 26, 37, 38 | Android push/tap PASS; 100 synthetic fan-out виміряно; gate FAIL: пряме джерело й CPU; relay підготовлено |
 | 03 | [Щохвилинні публікації графіків на сьогодні й завтра](./03-schedule-publications.issue.md) | AFK | [02](./02-real-push-free-platform-pilot.issue.md) | 9, 10, 16, 21, 23, 36 | Не почато |
 | 04 | [Регіональні зміни графіка: push та історія](./04-regional-schedule-changes.issue.md) | AFK | [03](./03-schedule-publications.issue.md) | 10, 11, 14, 16, 21, 36 | Не почато |
 | 05 | [Незалежний перемикач push про графіки](./05-regional-push-preference.issue.md) | AFK | [04](./04-regional-schedule-changes.issue.md) | 12, 13 | Не почато |

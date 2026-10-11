@@ -167,3 +167,24 @@ test('private publication trigger is inaccessible without the pilot environment 
   assert.equal((await worker.fetch(request('wrong'), { DB: binding, ENVIRONMENT: 'pilot', PILOT_RUN_TOKEN: secret })).status, 404);
   assert.equal((await worker.fetch(request('short'), { DB: binding, ENVIRONMENT: 'pilot', PILOT_RUN_TOKEN: 'short' })).status, 404);
 });
+
+test('malformed and mismatched Expo tickets keep history and cannot be mistaken for successful delivery', async () => {
+  for (const data of [null, [null], [{ status: 'ok', id: 33 }], [{ status: 'error', details: { error: 33 } }], [{ status: 'ok', id: 'one' }, { status: 'ok', id: 'extra' }]]) {
+    const p = setup();
+    try {
+      const user = identity();
+      await p.repository.register(user);
+      await p.repository.updateDelivery(user, { permission: 'granted', token: 'ExpoPushToken[test]' });
+      await p.repository.publish(day);
+      assert.deepEqual(await dispatchPush(p.database, async () => Response.json({ data })), { attempted: 1, accepted: 0 });
+      assert.equal((await p.repository.history(user)).items.length, 1);
+      const failure = await p.database.first<{ state: string; error: string }>({ sql: 'SELECT state, error FROM push_outbox', params: [] });
+      assert.equal(failure?.state, 'failed');
+      assert.equal(failure?.error, 'DeliveryUnknown');
+      assert.equal((await dispatchPush(p.database, async () => {
+        throw new Error('must not retry blindly');
+      })).attempted, 0);
+    }
+    finally { p.close(); }
+  }
+});

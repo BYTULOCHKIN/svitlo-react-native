@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: svitlo-schedule-relay
+    runtime: node
+    plan: free
+    region: frankfurt
+    buildCommand: npm ci --prefix server/schedule-relay && npm run build --prefix server/schedule-relay
+    startCommand: npm start --prefix server/schedule-relay
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_VERSION
+        value: 24.21.0
+      - key: SCHEDULE_RELAY_TOKEN
+        generateValue: true

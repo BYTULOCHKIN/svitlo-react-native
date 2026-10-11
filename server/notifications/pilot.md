@@ -1,6 +1,18 @@
 # Перевірка задачі 02
 
-Статус: прототип розгорнуто у власному Cloudflare акаунті; /health і remote API/D1 smoke PASS. Власні EAS, Firebase Android і FCM v1 credentials підключено; APK встановлено на Samsung. Реальний push показано на пристрої, Expo receipt — `ok`. Cloudflare Free gate не пройдено: отримання графіка з Cloudflare завершується таймаутом. Повний fan-out на 100 інсталяцій та iOS не перевірено. Платний тариф не вмикався.
+Статус: прототип розгорнуто у власному Cloudflare акаунті; /health і remote API/D1 smoke PASS. Власні EAS, Firebase Android і FCM v1 credentials підключено; реальний push, receipt `ok` і tap підтверджені на Samsung. 100 синтетичних інсталяцій виміряно в окремій remote D1. Cloudflare Free gate не пройдено: пряме джерело завершується таймаутом, частина CPU-вимірювань перевищує 10 ms. Публічний JSON графіка розгорнуто, Node relay підготовлено й перевірено локально; його хмарний провайдер ще не погоджено. iOS не перевірено, платний тариф не вмикався.
+
+## Публічний графік та поточний блокер
+
+Працює [GET /v1/schedules](https://svitlo-notifications-pilot.svitlonorify.workers.dev/v1/schedules), без installation credentials. За замовчуванням — поточна київська дата; `?date=2026-10-11` повертає саме збережений графік за цією датою. JSON містить `date`, усі `queues` та їхні інтервали, `verifiedAt` (Unix milliseconds) і `stale` після п’яти хвилин від останньої успішної перевірки. Межі інтервалів — хвилини від 00:00; стани `on`, `off`, `possible`. Регіональна відсутність відключень позначена `noOutagesScope=region` з порожнім списком черг. Недійсна дата — 400, ще не отримана дата — 404. GET читає D1, не запускає зовнішню перевірку й не змінює час свіжості.
+
+11 жовтня 2026 розгорнуто Worker version `486dc3e9-0281-47ac-8dba-50c40be6eda9`, застосовано третю віддалену міграцію. Початковий кеш одноразово заповнено приватним локальним helper із живого валідованого джерела: 12 черг, 1 SQL, 2 rows written. Перевірено remote HTTP 200, усі черги 1.1–6.2, 400 некоректної дати, 404 відсутньої дати й 404 неавторизованого private publication route. Заповнення кешу не створювало нових подій або push. Це не виправлення автоматичного джерела з Cloudflare: без доступного relay наступні прямі cron-перевірки все ще завершуються таймаутом, а кеш чесно стає застарілим.
+
+Для альтернативного джерела підготовлено [Node relay](../schedule-relay/README.md), lockfile, standalone bundle і [Render Free Blueprint](../../render.yaml). Worker підтримує HTTPS `SCHEDULE_RELAY_URL` та серверний secret `SCHEDULE_RELAY_TOKEN`; дата, повнота графіка й вік relay timestamp перевіряються повторно, timestamp зберігається без оновлення при помилці. Автоматичне підключення Render не виконано: потрібні погоджений провайдер, власний акаунт і Git-репозиторій; нинішній origin належить upstream-шаблону. Node-сервіс локально отримав живий графік, але cloud-доступ із Render ще не доведено. Не заявляється завершення задачі 02.
+
+[Повний benchmark на 100 інсталяцій](./benchmark.md): один REST-пакет, 9 SQL разом із snapshot-write; 100 accepted mock tickets, реальний Expo — 100 відмов для синтетичних токенів. Остаточний спостережений JSON/mock CPU — 9, 11, 15 ms; повна HTML-таблиця — 78, 34, 16 ms. SQL-ліміт дотримано, CPU Free стабільно не підтверджено. Успішний invocation `ok` не скасовує висновок за documented 10 ms. Подальше зменшення роботи одного invocation має зберегти доставку всім 100 у потрібний час; повний добовий бюджет із довгою історією ще не виміряно.
+
+Поточна валідація: TypeScript, lint і Worker dry-run PASS; 31 Jest suites / 147 tests PASS; 21 серверний інтеграційний тест PASS. Нові перевірки охоплюють публічний кеш, stale-стан без нового timestamp, відкладені старі writes, межі relay date/time, обмежений response stream, relay auth/cache/concurrency/source failure та некоректні Expo tickets без втрати history або сліпого retry.
 
 ## Підготовлена реалізація
 
@@ -93,7 +105,7 @@ Firebase конфігурація має відповідати пакету п�
 
 Поточні [Workers Free limits](https://developers.cloudflare.com/workers/platform/limits/): 10 ms CPU на invocation, 50 subrequests, 100 000 запитів на добу. [D1 Free](https://developers.cloudflare.com/d1/platform/pricing/): 5 млн прочитаних і 100 000 записаних рядків на добу, 5 GB сумарно; [одна база Free — до 500 MB](https://developers.cloudflare.com/d1/platform/limits/). SQL робота може впливати на CPU; проходження лише ліміту SQL недостатньо.
 
-## Результати
+## Результати першої native-перевірки перед benchmark
 
 ### Samsung та реальна доставка, 11 жовтня 2026
 
@@ -125,4 +137,4 @@ Samsung SM-S928U1, Android 16: development APK установлено зі зб�
 
 Перевірки застосунку: TypeScript і lint PASS; 31 Jest suites / 147 tests PASS. Раніше пройдені 14 серверних інтеграційних тестів, design:check і 31 contrast combinations; цього кроку серверний production-код і дизайн не змінювалися. Існуюче попередження `act` у тесті login-form не є помилкою push. Android `assembleDebug` та встановлення APK PASS; iOS і screen reader не перевірено.
 
-Висновок gate: **FAIL за доступом до джерела з Cloudflare; перевірка 100 одержувачів не завершена**. Android push transport працює, але автоматичне отримання графіків цим Worker зараз не підтверджено й повторно завершується таймаутом. Задачі 03–15 не починаються до виправлення цього шляху й завершення вимірювань або погодженого перегляду архітектури. Сам факт успішного push не завершує задачу 02.
+Висновок gate: **FAIL за прямим джерелом і CPU частини 100-одержувачевих вимірювань**. Android push transport працює; синтетичний cloud fan-out виміряно, але automatic source ще не підключено й повний бюджет не підтверджено. Задачі 03–15 не починаються до виправлення цього шляху й завершення вимірювань або погодженого перегляду архітектури. Сам факт успішного push не завершує задачу 02.

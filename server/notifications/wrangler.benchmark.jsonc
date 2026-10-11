@@ -1,0 +1,19 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "svitlo-notifications-benchmark",
+  "main": "benchmark-worker.ts",
+  "compatibility_date": "2026-10-11",
+  "compatibility_flags": ["global_fetch_strictly_public"],
+  "workers_dev": true,
+  "vars": {
+    "ENVIRONMENT": "benchmark",
+    "BENCHMARK_URL": "https://svitlo-notifications-benchmark.svitlonorify.workers.dev"
+  },
+  "d1_databases": [{
+    "binding": "DB",
+    "database_name": "svitlo-notifications-benchmark",
+    "database_id": "65119682-1f27-4a33-a4d0-978318eb34a0",
+    "migrations_dir": "migrations"
+  }],
+  "observability": { "enabled": true }
+}

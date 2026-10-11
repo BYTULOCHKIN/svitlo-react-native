@@ -27,3 +27,5 @@ google-services.json
 
 expo-env.d.ts
 # @end expo-cli
+# Standalone relay build artifacts
+server/schedule-relay/dist/

@@ -2,7 +2,7 @@
 
 Тип: HITL.
 
-Статус: Worker розгорнуто, remote API/D1 smoke PASS; власні EAS, Firebase Android і FCM v1 credentials налаштовано. APK встановлено на Samsung; реальний push, tap до картки, окремий cold launch і зміна OS permission перевірені. Cloudflare gate FAIL за доступом до джерела: повторні таймаути. Хмарний fan-out на 100 інсталяцій не виміряно. Задача не завершена; 03–15 не починаються.
+Статус: Worker розгорнуто, remote API/D1 smoke PASS; EAS/FCM і реальний Android push/tap перевірені. Синтетичний fan-out на 100 інсталяцій виміряно. Публічний JSON графіка працює, Node relay підготовлено й локально перевірено. Gate FAIL за прямим джерелом і CPU частини вимірювань; хмарний relay і повний бюджет ще не підтверджені. Задача не завершена; 03–15 не починаються.
 
 Джерело: [PRD](../svitlo-notifications.prd.md). [Погоджене розбиття](../svitlo-notifications.issues-proposal.md).
 
@@ -38,3 +38,7 @@ User stories PRD: 2, 17, 18, 19, 20, 22, 26, 37, 38.
 Samsung SM-S928U1 / Android 16: APK встановлено, empty-history Maestro PASS. Виправлено трактування першого Android permission стану; системний запит спостерігався після кнопки. Native-перевірки підтвердили історію при відмові через settings, очищення token у D1, повторну реєстрацію після ввімкнення, фактичний показ cron push, відповідну картку та cold launch окремого Expo test replay без нової події. Обидві Expo receipts `ok`. TypeScript і lint PASS; 31 Jest suites / 147 tests PASS. iOS, APNs, screen reader та foreground-показ не перевірені.
 
 Cron фактично працює, але `sourceValid=false` повторюється з таймаутом близько 15.5 с; альтернативні URL з remote preview також дали таймаут. Локально живий поточний графік із 12 чергами отримано за 279 ms. Для перевірки доставки публікацію створено локальним приватним helper у real remote D1, після чого її outbox розіслав розгорнутий cron: один accepted push, CPU 7 ms, 5 SQL. Це не успішний доступ Worker до джерела й не вимірювання fan-out на 100. Критерії джерела та повного cloud budget залишаються відкритими; причина недоступності ще не встановлена. Деталі й точні межі доказів — у [звіті пілота](../../server/notifications/pilot.md).
+
+Наступна перевірка 11 жовтня: окремий розгорнутий європейський Worker, browser headers, GET поточного графіка, POST і TLS socket не усунули таймаут. Підготовлено [Node relay та Render Free конфігурацію](../../server/schedule-relay/README.md), підтримку захищеного HTTPS relay у Worker і кеш з timestamp, що не оновлюється при невдачі. [Публічний GET /v1/schedules](https://svitlo-notifications-pilot.svitlonorify.workers.dev/v1/schedules) повернув усі 12 черг після одноразового приватного локального refresh. Без підключеного хмарного relay automatic refresh не працює.
+
+[Benchmark](../../server/notifications/benchmark.md) в окремій remote D1 підтвердив один REST-пакет на 100 інсталяцій і 9 SQL із snapshot-write. Mock accepted 100; справжній Expo дав 100 ticket-відмов для незареєстрованих синтетичних токенів. JSON/mock CPU 9, 11, 15 ms; HTML/table — 78, 34, 16 ms. Перевищення 10 ms Free блокує повний gate; тест не заявляє доставку на 100 пристроїв. Потрібні погодження провайдера relay, перевірка доступу з нього та зменшення роботи одного invocation без затримки для 100 користувачів. 21 server integration tests, TypeScript, lint, Worker dry-run та 147 Jest tests PASS.

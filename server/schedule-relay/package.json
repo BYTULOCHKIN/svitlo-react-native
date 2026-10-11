@@ -1,0 +1,9 @@
+{
+  "name": "svitlo-schedule-relay",
+  "private": true,
+  "version": "1.0.0",
+  "engines": { "node": ">=24 <25" },
+  "scripts": { "build": "node build.cjs", "start": "node dist/server.cjs" },
+  "dependencies": { "parse5": "7.3.0", "zod": "4.3.5" },
+  "devDependencies": { "esbuild": "0.27.2" }
+}

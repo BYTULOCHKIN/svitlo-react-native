@@ -1,11 +1,26 @@
 import type { NotificationDatabase } from './database';
-import z from 'zod';
 
 type Recipient = { history_id: string; push_token: string; schedule_date: string; installation_id: string };
-const ticketsSchema = z.object({ data: z.array(z.discriminatedUnion('status', [
-  z.object({ status: z.literal('ok'), id: z.string() }),
-  z.object({ status: z.literal('error'), details: z.object({ error: z.string() }).optional() }),
-])) });
+type Ticket = { status: 'ok'; id: string } | { status: 'error'; details?: { error: string } };
+
+function parseTickets(value: unknown): Ticket[] {
+  if (!value || typeof value !== 'object' || !('data' in value) || !Array.isArray(value.data) || value.data.length > 100)
+    throw new Error('Invalid Expo tickets');
+  return value.data.map((ticket: unknown) => {
+    if (!ticket || typeof ticket !== 'object' || !('status' in ticket))
+      throw new Error('Invalid Expo ticket');
+    if (ticket.status === 'ok' && 'id' in ticket && typeof ticket.id === 'string' && ticket.id.length > 0)
+      return { status: 'ok', id: ticket.id };
+    if (ticket.status === 'error') {
+      if (!('details' in ticket))
+        return { status: 'error' };
+      const details = ticket.details;
+      if (details && typeof details === 'object' && 'error' in details && typeof details.error === 'string')
+        return { status: 'error', details: { error: details.error } };
+    }
+    throw new Error('Invalid Expo ticket');
+  });
+}
 
 export function publicationMessage(recipient: Recipient) {
   return {
@@ -46,7 +61,7 @@ export async function dispatchPush(database: NotificationDatabase, request: type
     });
     if (!response.ok)
       throw new Error('ExpoTransportError');
-    const { data } = ticketsSchema.parse(await response.json());
+    const data = parseTickets(await response.json());
     if (data.length !== recipients.length)
       throw new Error('ExpoTicketCountMismatch');
     const results = data.map((ticket, index) => {
