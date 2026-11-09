@@ -66,6 +66,7 @@ test('Cloudflare tick only sends an authenticated trigger and does not parse sou
     calls++;
     assert.equal(String(input), 'https://backend.invalid/internal/tick');
     assert.equal(init?.method, 'POST');
+    assert.equal(init?.redirect, 'manual');
     assert.equal(new Headers(init?.headers).get('Authorization'), `Bearer ${token}`);
     return new Response('not JSON, deliberately unused', { status: 200 });
   };
@@ -74,6 +75,10 @@ test('Cloudflare tick only sends an authenticated trigger and does not parse sou
   assert.deepEqual(await triggerBackend({ BACKEND_URL: 'https://backend.invalid', TICK_RUN_TOKEN: token }, request), { configured: true, ok: true, status: 200 });
   assert.equal(calls, 1);
   assert.equal((await triggerBackend({ BACKEND_URL: 'https://backend.invalid', TICK_RUN_TOKEN: token }, async () => new Response('', { status: 503 }))).ok, false);
+  assert.deepEqual(await triggerBackend({ BACKEND_URL: 'https://backend.invalid', TICK_RUN_TOKEN: token }, async (_input, init) => {
+    assert.equal(init?.redirect, 'manual');
+    return new Response(null, { status: 302, headers: { Location: 'https://other.invalid' } });
+  }), { configured: true, ok: false, status: 302 });
 });
 
 test('compatibility forwarding preserves installation identity and date without leaking gateway secrets', async () => {

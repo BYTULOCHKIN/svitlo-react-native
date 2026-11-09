@@ -26,7 +26,7 @@ export async function triggerBackend(env: Pick<Bindings, 'BACKEND_URL' | 'TICK_R
     method: 'POST',
     headers: { Authorization: `Bearer ${env.TICK_RUN_TOKEN}` },
     signal: AbortSignal.timeout(240000),
-    redirect: 'error',
+    redirect: 'manual',
   });
   // No schedules, recipient arrays or Expo responses are processed in this invocation.
   await response.body?.cancel();
@@ -51,6 +51,9 @@ export default {
     try {
       console.info(JSON.stringify({ operation: 'backend-tick', ...await triggerBackend(env) }));
     }
-    catch { console.error(JSON.stringify({ operation: 'backend-tick', ok: false })); }
+    catch (error) {
+      const reason = error instanceof Error ? error.message.replaceAll(env.TICK_RUN_TOKEN ?? '[unconfigured]', '[redacted]').slice(0, 300) : 'unavailable';
+      console.error(JSON.stringify({ operation: 'backend-tick', ok: false, reason }));
+    }
   },
 };
