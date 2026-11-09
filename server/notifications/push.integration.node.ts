@@ -77,7 +77,7 @@ test('100 installations fan out into one Expo REST request with distinct history
     };
     assert.deepEqual(await dispatchPush(counted, expo), { attempted: 100, accepted: 100 });
     assert.equal(requests, 1);
-    assert.equal(queries, 8, '100 recipients must not turn into 100 D1 statements');
+    assert.equal(queries, 9, '100 recipients must not turn into 100 D1 statements');
     for (const user of users)
       assert.equal((await p.repository.history(user)).items.length, 1);
   }

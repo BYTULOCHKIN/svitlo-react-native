@@ -1,4 +1,4 @@
-import type { DeliverySettings, InstallationIdentity } from './models';
+import type { DeliverySettings, InstallationIdentity, NotificationPreferences } from './models';
 import { historySchema, registrationSchema } from './models';
 
 type ClientOptions = { url: string; getIdentity: () => Promise<InstallationIdentity>; request?: typeof fetch };
@@ -38,6 +38,12 @@ export function createNotificationsClient({ url, getIdentity, request = fetch }:
   return {
     connect,
     reset: () => { registration = undefined; },
+    async updatePreferences(settings: NotificationPreferences) {
+      const identity = await connect();
+      const result = await send('/v1/preferences', { method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${identity.secret}`, 'X-Installation-Id': identity.id }, body: JSON.stringify(settings) });
+      if (!result || result.revision !== settings.revision)
+        throw new Error('Не вдалося синхронізувати налаштування. Спробуйте ще раз.');
+    },
     async updateDelivery(settings: DeliverySettings) {
       const identity = await connect();
       await send('/v1/delivery', { method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${identity.secret}`, 'X-Installation-Id': identity.id }, body: JSON.stringify(settings) });

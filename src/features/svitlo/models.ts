@@ -3,7 +3,7 @@ export type Interval = { start: number; end: number; state: PowerState };
 export type QueueSchedule = { queue: string; intervals: Interval[] };
 export type ScheduleDay = { date: string; queues: QueueSchedule[]; noOutagesScope?: 'region'; verifiedAt?: number };
 export type LocationIcon = 'home' | 'work' | 'school' | 'shop' | 'gym' | 'parents' | 'cafe' | 'heart';
-export type Location = { id: string; name: string; queue: string; icon: LocationIcon };
+export type Location = { id: string; name: string; queue: string; icon: LocationIcon; notificationsEnabled?: boolean };
 
 const kyivDate = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Kyiv', year: 'numeric', month: '2-digit', day: '2-digit' });
 const kyivTime = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Kyiv', hourCycle: 'h23', hour: '2-digit', minute: '2-digit', second: '2-digit' });

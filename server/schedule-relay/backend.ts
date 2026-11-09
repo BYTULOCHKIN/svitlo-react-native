@@ -2,6 +2,7 @@ import type { NotificationDatabase } from '../notifications/database';
 import type { ScheduleSnapshot } from '../notifications/schedules';
 import { createNotificationApi } from '../notifications/api';
 import { authorizedInternal, internalJson } from '../notifications/internal-http';
+import { formOutageWarnings } from '../notifications/outage-warnings';
 import { fetchScheduleSnapshot, kyivToday } from '../notifications/pilot-source';
 import { dispatchPush } from '../notifications/push';
 import { createNotificationRepository } from '../notifications/repository';
@@ -83,12 +84,22 @@ export function createBackendApi(options: Options) {
         }
         catch (error) { sources.push({ date, valid: false, stage, reason: failureReason(error) }); }
       }
-      const delivery = await dispatchPush(database, options.transport, options.expoAccessToken);
+      const warningJobs = await formOutageWarnings(database, now());
+      const delivery = { attempted: 0, accepted: 0 };
+      // A regional event plus warnings for several queues can exceed 100
+      // recipients. Drain bounded Expo batches, prioritizing expiring warnings.
+      for (let batch = 0; batch < 16; batch++) {
+        const sent = await dispatchPush(database, options.transport, { accessToken: options.expoAccessToken, now });
+        delivery.attempted += sent.attempted;
+        delivery.accepted += sent.accepted;
+        if (sent.attempted < 100 && !await database.first({ sql: 'SELECT history_id FROM push_outbox WHERE state = \'queued\' LIMIT 1', params: [] }))
+          break;
+      }
       await database.batch([{
         sql: 'UPDATE backend_jobs SET completed_slot = ?, lease_until = 0 WHERE name = ? AND owner = ?',
         params: [slot, 'schedule-poll', owner],
       }]);
-      return { skipped: false, sources, ...delivery, wallMs: now() - started };
+      return { skipped: false, sources, warningJobs, ...delivery, wallMs: now() - started };
     }
     finally {
       await database.batch([{

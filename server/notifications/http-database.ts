@@ -18,7 +18,7 @@ export function createHttpDatabase(options: Options): NotificationDatabase {
     });
     if (!response.ok)
       throw new Error('Storage request failed');
-    const result: unknown = JSON.parse(await boundedBody(response, 256000));
+    const result: unknown = JSON.parse(await boundedBody(response, 512000));
     if (!result || typeof result !== 'object')
       throw new Error('Invalid storage response');
     if (operation === 'batch') {

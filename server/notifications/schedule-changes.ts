@@ -66,7 +66,8 @@ export function createScheduleChangeRecorder(database: NotificationDatabase, now
       { sql: `INSERT OR IGNORE INTO push_outbox (history_id, state)
         SELECT h.id, 'queued' FROM notification_history h JOIN notification_events e ON e.id = h.event_id
         JOIN installation_delivery d ON d.installation_id = h.installation_id
-        WHERE e.id = ? AND e.version = ? AND e.push_eligible = 1 AND d.permission = 'granted' AND d.push_token IS NOT NULL
+        LEFT JOIN installation_preferences p ON p.installation_id = h.installation_id
+        WHERE COALESCE(p.regional_push_enabled, 1) = 1 AND e.id = ? AND e.version = ? AND e.push_eligible = 1 AND d.permission = 'granted' AND d.push_token IS NOT NULL
         AND e.sequence > d.enabled_after_sequence`, params: [id, version] },
     ]);
   };

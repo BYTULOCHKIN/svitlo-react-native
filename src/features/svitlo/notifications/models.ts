@@ -15,7 +15,27 @@ export const notificationSchema = z.object({
   version: z.string().regex(/^[a-f0-9]{64}$/),
 });
 export type ScheduleNotification = z.infer<typeof notificationSchema>;
-export const historySchema = z.object({ items: z.array(notificationSchema), nextCursor: z.string().nullable() });
+export const subscriptionSchema = z.object({
+  id: z.string().regex(/^[\w-]{1,64}$/),
+  name: z.string().trim().min(1).max(20),
+  queue: z.string().regex(/^\d{1,2}\.\d{1,2}$/),
+  enabled: z.boolean(),
+});
+export const preferencesSchema = z.object({
+  revision: z.number().int().positive().max(Number.MAX_SAFE_INTEGER),
+  regionalPushEnabled: z.boolean(),
+  locations: z.array(subscriptionSchema).max(50),
+}).refine(value => new Set(value.locations.map(location => location.id)).size === value.locations.length);
+export type NotificationPreferences = z.infer<typeof preferencesSchema>;
+export const warningSchema = notificationSchema.extend({
+  type: z.literal('outage-warning'),
+  queue: subscriptionSchema.shape.queue,
+  outageAt: z.number().int().positive(),
+  locations: z.array(subscriptionSchema.pick({ id: true, name: true })).min(1).max(50),
+});
+export const notificationItemSchema = z.discriminatedUnion('type', [notificationSchema, warningSchema]);
+export type NotificationItem = z.infer<typeof notificationItemSchema>;
+export const historySchema = z.object({ items: z.array(notificationItemSchema), nextCursor: z.string().nullable() });
 export type NotificationPage = z.infer<typeof historySchema>;
 export const deliverySchema = z.object({
   permission: z.enum(['undetermined', 'granted', 'denied']),

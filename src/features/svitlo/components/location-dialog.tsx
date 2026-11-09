@@ -8,6 +8,7 @@ import { AppDialog } from '@/design-system/dialog';
 import { useDialogFocus } from '@/design-system/dialog-focus';
 import { AppInput } from '@/design-system/input';
 import { AppText } from '@/design-system/text';
+import { AppToggle } from '@/design-system/toggle';
 import { useLocations } from '../location-store';
 import { LocationChoices } from './location-choices';
 
@@ -17,6 +18,7 @@ export function LocationDialog({ location, queues, onClose }: Props) {
   const [name, setName] = useState(location?.name ?? '');
   const [queue, setQueue] = useState(location?.queue ?? '');
   const [icon, setIcon] = useState<LocationIcon>(location?.icon ?? 'home');
+  const [notificationsEnabled, setNotificationsEnabled] = useState(location?.notificationsEnabled ?? true);
   const [error, setError] = useState('');
   const [touched, setTouched] = useState(false);
   const [confirmation, setConfirmation] = useState<'discard' | 'delete' | null>(null);
@@ -26,7 +28,7 @@ export function LocationDialog({ location, queues, onClose }: Props) {
   const { add, edit, remove } = useLocations();
   const choices = [...new Set([...queues, ...(location ? [location.queue] : [])])];
   const valid = name.trim().length > 0 && name.trim().length <= 20 && /^\d+\.\d+$/.test(queue);
-  const dirty = name !== (location?.name ?? '') || queue !== (location?.queue ?? '') || icon !== (location?.icon ?? 'home');
+  const dirty = name !== (location?.name ?? '') || queue !== (location?.queue ?? '') || icon !== (location?.icon ?? 'home') || notificationsEnabled !== (location?.notificationsEnabled ?? true);
 
   function cancelConfirmation() {
     setConfirmation(null);
@@ -46,8 +48,8 @@ export function LocationDialog({ location, queues, onClose }: Props) {
       return;
     try {
       if (location)
-        edit({ ...location, name, queue, icon });
-      else add({ name, queue, icon });
+        edit({ ...location, name, queue, icon, notificationsEnabled });
+      else add({ name, queue, icon, notificationsEnabled });
       onClose();
     }
     catch {
@@ -95,6 +97,7 @@ export function LocationDialog({ location, queues, onClose }: Props) {
         : (
             <>
               <AppInput ref={nameRef} label="Назва локації" value={name} onChangeText={setName} onBlur={() => setTouched(true)} maxLength={20} placeholder="Наприклад, Дім" helperText="Назва обов’язкова, до 20 символів." error={touched && !name.trim() ? 'Вкажіть назву локації.' : undefined} />
+              <AppToggle label="Попередження за 10 хвилин" description="Про заплановане відключення для цієї локації." value={notificationsEnabled} onValueChange={setNotificationsEnabled} />
               <LocationChoices queues={choices} queue={queue} onQueueChange={setQueue} icon={icon} onIconChange={setIcon} />
               {!!error && <AppText tone="danger" accessibilityRole="alert" accessibilityLiveRegion="polite">{error}</AppText>}
               {location && (

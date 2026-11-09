@@ -59,11 +59,11 @@ it('adds the named location through the actual selector and makes it active', ()
   fillForm();
   fireEvent.press(screen.getByRole('button', { name: 'Зберегти' }));
   const state = useLocations.getState();
-  expect(state.locations).toContainEqual({ id: 'new-location', name: 'Робота', queue: '1.2', icon: 'work' });
+  expect(state.locations).toContainEqual({ id: 'new-location', name: 'Робота', queue: '1.2', icon: 'work', notificationsEnabled: true });
   expect(state.selectedId).toBe('new-location');
   expect(screen.queryByRole('header', { name: 'Нова локація' })).toBeNull();
   expect(screen.getByRole('button', { name: 'Обрати локацію: Робота, черга 1.2' })).toBeOnTheScreen();
-  expect(storage.set).toHaveBeenLastCalledWith('svitlo.locations.v1', JSON.stringify({ locations: state.locations, selectedId: state.selectedId }));
+  expect(storage.set).toHaveBeenLastCalledWith('svitlo.locations.v1', JSON.stringify({ locations: state.locations, selectedId: state.selectedId, regionalPushEnabled: state.regionalPushEnabled, notificationRevision: state.notificationRevision }));
 });
 
 it('retains the draft and confirmed state on storage failure, and allows retry', () => {

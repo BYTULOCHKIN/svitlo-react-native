@@ -17,13 +17,13 @@ const server = createServer(async (incoming, outgoing) => {
     for await (const chunk of incoming) {
       const buffer = Buffer.from(chunk);
       length += buffer.length;
-      if (length > 4096) {
+      if (length > 16384) {
         outgoing.writeHead(413).end();
         return;
       }
       chunks.push(buffer);
     }
-    const request = new Request(`http://127.0.0.1${incoming.url}`, { method: incoming.method, headers: new Headers(Object.entries(incoming.headers).flatMap(([key, value]) => value ? [[key, Array.isArray(value) ? value.join(',') : value]] : [])), body: incoming.method === 'POST' ? Buffer.concat(chunks).toString('utf8') : undefined });
+    const request = new Request(`http://127.0.0.1${incoming.url}`, { method: incoming.method, headers: new Headers(Object.entries(incoming.headers).flatMap(([key, value]) => value ? [[key, Array.isArray(value) ? value.join(',') : value]] : [])), body: incoming.method !== 'GET' && incoming.method !== 'HEAD' ? Buffer.concat(chunks).toString('utf8') : undefined });
     const response = await api(request);
     outgoing.writeHead(response.status, Object.fromEntries(response.headers));
     outgoing.end(await response.text());

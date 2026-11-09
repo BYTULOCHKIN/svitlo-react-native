@@ -2,10 +2,12 @@ import { useEffect } from 'react';
 import { Platform } from 'react-native';
 import { useLocations } from '../location-store';
 import { PushPermissionExplanation } from './permission-ui';
+import { useNotificationPreferencesSync } from './preferences-sync';
 import { PushNavigation } from './push-navigation';
 import { notificationsClient } from './runtime';
 
 export function NotificationBootstrap() {
+  useNotificationPreferencesSync();
   const hasLocations = useLocations(state => state.locations.length > 0);
   useEffect(() => {
     if (hasLocations && Platform.OS !== 'web')

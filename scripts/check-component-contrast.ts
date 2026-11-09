@@ -48,6 +48,9 @@ for (const [name, background] of Object.entries({ selected: backgrounds.selected
 for (const foreground of [palette.muted, palette.green, palette.red])
   checks.push({ name: `input border ${foreground}`, foreground: rgb(foreground), background: backgrounds.raised, minimum: 3 });
 
+checks.push({ name: 'toggle thumb/on', foreground: rgb(palette.onAccent), background: rgb(palette.green), minimum: 3 });
+checks.push({ name: 'toggle thumb/off', foreground: rgb(palette.white), background: rgb(palette.border), minimum: 3 });
+
 // WCAG 2.2 SC 1.4.3 / 1.4.11; compare unrounded ratios. Disabled controls
 // are excluded. This checks token colors and alpha, not native rendering/focus.
 const results = checks.map((check) => {

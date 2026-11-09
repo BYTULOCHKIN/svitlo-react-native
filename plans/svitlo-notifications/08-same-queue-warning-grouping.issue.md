@@ -2,7 +2,7 @@
 
 Тип: AFK.
 
-Статус: не почато.
+Статус: реалізація й автоматичні перевірки завершені; тестова D1 PASS. Production-розгортання, оновлений APK та native-перевірка готуються.
 
 Джерело: [PRD](../svitlo-notifications.prd.md). [Погоджене розбиття](../svitlo-notifications.issues-proposal.md).
 
@@ -22,3 +22,7 @@ User stories PRD: 7, 8.
 ## Blocked by
 
 - Blocked by #[plans/svitlo-notifications/07-all-location-subscriptions.issue.md](./07-all-location-subscriptions.issue.md).
+
+## Реалізація та перевірки
+
+Див. [звіт №05–08](../../server/notifications/preferences-warnings.md).

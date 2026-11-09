@@ -1,0 +1,67 @@
+-- Rebuild the dependent tables from leaf to parent in one transaction.
+-- Staging copies have no foreign keys; IDs, timestamps and delivery state survive.
+CREATE TABLE _events_0009 AS SELECT * FROM notification_events;
+CREATE TABLE _history_0009 AS SELECT * FROM notification_history;
+CREATE TABLE _outbox_0009 AS SELECT * FROM push_outbox;
+CREATE TABLE _sequence_0009 AS SELECT seq FROM sqlite_sequence WHERE name = 'notification_events';
+
+DROP TABLE push_outbox;
+DROP TABLE notification_history;
+DROP TABLE notification_events;
+
+CREATE TABLE notification_events (
+  sequence INTEGER PRIMARY KEY AUTOINCREMENT,
+  id TEXT NOT NULL UNIQUE,
+  type TEXT NOT NULL CHECK (type IN ('schedule-published', 'schedule-changed', 'outage-warning')),
+  schedule_date TEXT NOT NULL,
+  version TEXT NOT NULL,
+  created_at INTEGER NOT NULL,
+  push_eligible INTEGER NOT NULL DEFAULT 1 CHECK (push_eligible IN (0, 1))
+);
+INSERT INTO notification_events (sequence, id, type, schedule_date, version, created_at, push_eligible)
+  SELECT sequence, id, type, schedule_date, version, created_at, push_eligible FROM _events_0009;
+-- Preserve the AUTOINCREMENT high-water mark even if older events were deleted.
+INSERT INTO notification_events (sequence, id, type, schedule_date, version, created_at)
+  SELECT COALESCE(MAX(seq), 0) + 1, 'migration:0009:sequence', 'schedule-published',
+    '1970-01-01', '0000000000000000000000000000000000000000000000000000000000000000', 1
+  FROM _sequence_0009;
+DELETE FROM notification_events WHERE id = 'migration:0009:sequence';
+
+CREATE TABLE notification_history (
+  id TEXT PRIMARY KEY,
+  installation_id TEXT NOT NULL REFERENCES installations(id),
+  event_id TEXT NOT NULL REFERENCES notification_events(id),
+  created_at INTEGER NOT NULL,
+  details TEXT CHECK (details IS NULL OR json_valid(details)),
+  UNIQUE (installation_id, event_id)
+);
+INSERT INTO notification_history (id, installation_id, event_id, created_at) SELECT * FROM _history_0009;
+CREATE INDEX history_installation_order ON notification_history(installation_id, created_at DESC, id DESC);
+
+CREATE TABLE push_outbox (
+  history_id TEXT PRIMARY KEY REFERENCES notification_history(id),
+  state TEXT NOT NULL CHECK (state IN ('queued', 'claimed', 'sent', 'failed')),
+  claim_key TEXT,
+  ticket_id TEXT,
+  error TEXT
+);
+INSERT INTO push_outbox SELECT * FROM _outbox_0009;
+CREATE INDEX push_outbox_state ON push_outbox(state);
+CREATE INDEX push_outbox_claim_key ON push_outbox(claim_key);
+
+DROP TABLE _outbox_0009;
+DROP TABLE _history_0009;
+DROP TABLE _events_0009;
+DROP TABLE _sequence_0009;
+
+CREATE TABLE outage_warning_jobs (
+  id TEXT PRIMARY KEY,
+  schedule_date TEXT NOT NULL,
+  queue TEXT NOT NULL,
+  outage_at INTEGER NOT NULL,
+  due_at INTEGER NOT NULL,
+  first_seen_at INTEGER NOT NULL,
+  revision INTEGER NOT NULL,
+  UNIQUE (schedule_date, queue, outage_at)
+);
+CREATE INDEX outage_warning_due ON outage_warning_jobs(due_at);

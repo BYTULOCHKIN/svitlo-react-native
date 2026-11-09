@@ -7,8 +7,8 @@ import { LocationSelector } from './location-selector';
 
 jest.mock('expo-crypto', () => ({ randomUUID: jest.fn(() => 'work') }));
 
-const home: Location = { id: 'home', name: 'Дім', queue: '1.1', icon: 'home' };
-const work: Location = { id: 'work', name: 'Робота', queue: '2.1', icon: 'work' };
+const home: Location = { id: 'home', name: 'Дім', queue: '1.1', icon: 'home', notificationsEnabled: true };
+const work: Location = { id: 'work', name: 'Робота', queue: '2.1', icon: 'work', notificationsEnabled: true };
 const persisted = new Map<string, string>();
 
 beforeEach(() => {
@@ -46,7 +46,7 @@ it.each(['Дім', 'Робота'])('edits %s, trims its name and restores selec
   fireEvent.press(screen.getByRole('radio', { name: 'Іконка: Кохані' }));
   fireEvent.press(screen.getByRole('radio', { name: 'Черга 1.2' }));
   fireEvent.press(screen.getByRole('button', { name: 'Зберегти' }));
-  const edited = { ...(name === 'Дім' ? home : work), name: 'Квартира', queue: '1.2', icon: 'heart' };
+  const edited = { ...(name === 'Дім' ? home : work), name: 'Квартира', queue: '1.2', icon: 'heart', notificationsEnabled: true };
   const expected = name === 'Дім' ? [edited, work] : [home, edited];
   expect(useLocations.getState().locations).toEqual(expected);
   expect(useLocations.getState().selectedId).toBe('home');
@@ -172,4 +172,12 @@ it('keeps a location after a failed deletion and allows retry inside its confirm
   expect(screen.getByRole('header', { name: 'Видалити локацію?' })).toBeOnTheScreen();
   fireEvent.press(screen.getByRole('button', { name: 'Видалити' }));
   expect(useLocations.getState().locations).toEqual([home]);
+});
+
+it('edits a location warning toggle without changing other locations or regional preferences', () => {
+  render(<LocationSelector queues={['1.1', '2.1']} />);
+  openEdit();
+  fireEvent(screen.getByRole('switch', { name: 'Попередження за 10 хвилин' }), 'valueChange', false);
+  fireEvent.press(screen.getByRole('button', { name: 'Зберегти' }));
+  expect(useLocations.getState().locations).toEqual([home, { ...work, notificationsEnabled: false }]);
 });

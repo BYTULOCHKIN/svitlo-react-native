@@ -1,7 +1,8 @@
 import type { ScheduleDay } from '../../src/features/svitlo/models';
-import type { DeliverySettings, InstallationIdentity, NotificationPage, ScheduleNotification } from '../../src/features/svitlo/notifications/models';
+import type { DeliverySettings, InstallationIdentity, NotificationItem, NotificationPage, NotificationPreferences } from '../../src/features/svitlo/notifications/models';
 import type { NotificationDatabase, SqlQuery } from './database';
 import { dateSchema } from '../../src/features/svitlo/notifications/models';
+import { preferenceAllowsPush } from './delivery-policy';
 
 export class NotificationApiError extends Error {
   constructor(readonly status: number, message: string) {
@@ -74,7 +75,8 @@ export function createNotificationRepository(database: NotificationDatabase, now
         SELECT h.id, 'queued' FROM notification_history h
         JOIN notification_events e ON e.id = h.event_id
         JOIN installation_delivery d ON d.installation_id = h.installation_id
-        WHERE e.id = ? AND d.permission = 'granted' AND d.push_token IS NOT NULL
+        LEFT JOIN installation_preferences p ON p.installation_id = h.installation_id
+        WHERE COALESCE(p.regional_push_enabled, 1) = 1 AND e.id = ? AND d.permission = 'granted' AND d.push_token IS NOT NULL
         AND e.sequence > d.enabled_after_sequence`, params: [id] },
       ...writes,
     ]);
@@ -105,24 +107,51 @@ export function createNotificationRepository(database: NotificationDatabase, now
     return { ok: true };
   }
 
+  async function updatePreferences(identity: InstallationIdentity, settings: NotificationPreferences) {
+    await authenticate(identity);
+    const locations = JSON.stringify([...settings.locations].sort((a, b) => a.id.localeCompare(b.id, 'en')));
+    await database.batch([{
+      sql: `INSERT INTO installation_preferences (installation_id, revision, regional_push_enabled, locations, updated_at)
+        VALUES (?, ?, ?, ?, ?) ON CONFLICT(installation_id) DO UPDATE SET revision = excluded.revision,
+        regional_push_enabled = excluded.regional_push_enabled, locations = excluded.locations, updated_at = excluded.updated_at
+        WHERE excluded.revision > installation_preferences.revision`,
+      params: [identity.id, settings.revision, settings.regionalPushEnabled ? 1 : 0, locations, now()],
+    }, {
+      sql: `UPDATE push_outbox SET state = 'failed', error = 'PreferencesChanged' WHERE state = 'queued' AND EXISTS (
+        SELECT 1 FROM notification_history h JOIN notification_events e ON e.id = h.event_id
+        LEFT JOIN installation_preferences p ON p.installation_id = h.installation_id
+        WHERE h.id = push_outbox.history_id AND h.installation_id = ? AND NOT ${preferenceAllowsPush})`,
+      params: [identity.id],
+    }]);
+    const stored = await database.first<{ revision: number; regional_push_enabled: number; locations: string }>({
+      sql: 'SELECT revision, regional_push_enabled, locations FROM installation_preferences WHERE installation_id = ?',
+      params: [identity.id],
+    });
+    if (!stored)
+      throw new Error('Preferences not saved');
+    if (stored.revision === settings.revision && (stored.locations !== locations || stored.regional_push_enabled !== Number(settings.regionalPushEnabled)))
+      throw new NotificationApiError(409, 'Конфлікт версії налаштувань');
+    return { revision: stored.revision };
+  }
+
   async function history(identity: InstallationIdentity, cursor?: string): Promise<NotificationPage> {
     await authenticate(identity);
     const boundary = cursor ? parseCursor(cursor) : undefined;
     const params: (string | number)[] = [identity.id];
     if (boundary)
       params.push(boundary.time, boundary.time, boundary.id);
-    const items = await database.all<ScheduleNotification>({
-      sql: `SELECT h.id, e.type, h.created_at AS createdAt, e.schedule_date AS scheduleDate, e.version
+    const items = await database.all<NotificationItem & { details: string | null }>({
+      sql: `SELECT h.id, e.type, h.created_at AS createdAt, e.schedule_date AS scheduleDate, e.version, h.details
         FROM notification_history h JOIN notification_events e ON h.event_id = e.id
         WHERE h.installation_id = ? ${boundary ? 'AND (h.created_at < ? OR (h.created_at = ? AND h.id < ?))' : ''}
         ORDER BY h.created_at DESC, h.id DESC LIMIT 51`,
       params,
     });
-    const page = items.slice(0, 50);
+    const page: NotificationItem[] = items.slice(0, 50).map(({ details, ...item }) => item.type === 'outage-warning' ? { ...item, ...JSON.parse(details!) } : item);
     const last = page.at(-1);
     return { items: page, nextCursor: items.length > 50 && last ? `${last.createdAt}|${last.id}` : null };
   }
-  return { register, publish, history, updateDelivery };
+  return { register, publish, history, updateDelivery, updatePreferences };
 }
 
 function parseCursor(cursor: string) {

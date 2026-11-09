@@ -62,3 +62,17 @@ it('deduplicates overlapping history pages', async () => {
   await waitFor(() => expect(screen.queryByRole('button', { name: 'Показати ще' })).toBeNull());
   expect(screen.getAllByRole('header', { name: 'Опубліковано графік' })).toHaveLength(1);
 });
+
+it('shows the entire grouped warning with names, queue and absolute Kyiv time without truncating text', async () => {
+  const names = ['Батьківська квартира', 'Робота та майстерня', 'Друга квартира'];
+  const warning = { ...item, id: 'outage:2026-11-09:1.1:1', type: 'outage-warning', scheduleDate: '2026-11-09', queue: '1.1', outageAt: Date.parse('2026-11-09T08:00:00Z'), locations: names.map((name, index) => ({ id: String(index), name })) };
+  show(jest.fn().mockResolvedValue({ items: [warning], nextCursor: null }));
+  expect(await screen.findByRole('header', { name: 'Відключення за 10 хвилин' })).toBeOnTheScreen();
+  expect(screen.getByText('Черга 1.1 · Відключення о 10:00')).toBeOnTheScreen();
+  for (const name of names) {
+    const text = screen.getByText(name);
+    expect(text).toBeOnTheScreen();
+    expect(text.props.numberOfLines).toBeUndefined();
+    expect(text.props.allowFontScaling).not.toBe(false);
+  }
+});

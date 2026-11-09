@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import type { createNotificationsClient } from './client';
-import type { ScheduleNotification } from './models';
+import type { NotificationItem } from './models';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { useRef } from 'react';
 import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
@@ -40,20 +40,26 @@ export function NotificationsScreen({ client, hasLocations, native = true, targe
           </View>
         )}
         {canLoad && !query.isPending && !query.error && !items.length && <AppText tone="secondary">Сповіщень поки немає. Тут з’являтимуться повідомлення після налаштування.</AppText>}
-        {items.map(item => <View key={item.id} onLayout={item.id === targetId ? event => scroll.current?.scrollTo({ y: event.nativeEvent.layout.y, animated: true }) : undefined}><ScheduleNotificationCard item={item} selected={item.id === targetId} /></View>)}
+        {items.map(item => <View key={item.id} onLayout={item.id === targetId ? event => scroll.current?.scrollTo({ y: event.nativeEvent.layout.y, animated: true }) : undefined}><NotificationItemCard item={item} selected={item.id === targetId} /></View>)}
         {query.hasNextPage && <AppButton variant="secondary" loading={query.isFetchingNextPage} onPress={() => { void query.fetchNextPage(); }}>Показати ще</AppButton>}
       </ScrollView>
     </SafeAreaView>
   );
 }
 
-function ScheduleNotificationCard({ item, selected }: { item: ScheduleNotification; selected: boolean }) {
+function NotificationItemCard({ item, selected }: { item: NotificationItem; selected: boolean }) {
   const scheduleDate = new Date(`${item.scheduleDate}T12:00:00Z`).toLocaleDateString('uk-UA', { timeZone: 'Europe/Kyiv', day: 'numeric', month: 'long', year: 'numeric' });
   const createdAt = new Date(item.createdAt).toLocaleString('uk-UA', { timeZone: 'Europe/Kyiv', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' });
   return (
     <View style={[styles.card, selected && styles.selected]} testID={`notification-${item.id}`} accessibilityLabel={selected ? 'Сповіщення, яке ви відкрили' : undefined}>
-      <AppText variant="section" accessibilityRole="header">{item.type === 'schedule-changed' ? 'Графік змінено' : 'Опубліковано графік'}</AppText>
+      <AppText variant="section" accessibilityRole="header">{item.type === 'outage-warning' ? 'Відключення за 10 хвилин' : item.type === 'schedule-changed' ? 'Графік змінено' : 'Опубліковано графік'}</AppText>
       <AppText>{`Графік на ${scheduleDate}`}</AppText>
+      {item.type === 'outage-warning' && (
+        <>
+          <AppText>{`Черга ${item.queue} · Відключення о ${new Date(item.outageAt).toLocaleTimeString('uk-UA', { timeZone: 'Europe/Kyiv', hour: '2-digit', minute: '2-digit' })}`}</AppText>
+          {item.locations.map(location => <AppText key={location.id}>{location.name}</AppText>)}
+        </>
+      )}
       <AppText variant="caption" tone="secondary">{createdAt}</AppText>
     </View>
   );

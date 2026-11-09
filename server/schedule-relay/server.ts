@@ -23,7 +23,7 @@ const server = createServer(async (incoming, outgoing) => {
     let size = 0;
     for await (const chunk of incoming) {
       size += chunk.length;
-      if (size > 4096) {
+      if (size > 16384) {
         outgoing.writeHead(413).end();
         return;
       }
