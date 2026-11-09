@@ -37,6 +37,14 @@ To run the app on Android
 pnpm android
 ```
 
+## Production APK
+
+`pnpm build:production:apk` builds a signed APK with the production package `ua.svitlo.rn` and the Render backend. The app runs independently of Metro. This profile extends `production`; the existing `build:production:android` command still produces an AAB for Google Play.
+
+Before building, log in to the project's Expo account. Configure the EAS `production` environment variable `GOOGLE_SERVICES_JSON` as a file containing the Firebase Android configuration for `ua.svitlo.rn`, and configure the matching FCM v1 credentials in EAS. The development package's Firebase configuration is different. Service-account private keys belong only in EAS credentials, never in the APK or public environment variables.
+
+Download the APK from the EAS build page and open it on an Android device. Android may request permission to install apps from the browser or file manager. Keep the production signing key for future APK updates.
+
 ## ✍️ Documentation
 
 - [Rules and Conventions](https://starter.obytes.com/getting-started/rules-and-conventions/)

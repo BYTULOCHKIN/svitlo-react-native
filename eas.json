@@ -19,6 +19,18 @@
         "EXPO_PUBLIC_APP_ENV": "production"
       }
     },
+    "production-apk": {
+      "extends": "production",
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_APP_ENV": "production",
+        "EXPO_PUBLIC_SVITLO_API_URL": "https://svitlo-backend-pilot.onrender.com",
+        "EXPO_PUBLIC_NOTIFICATIONS_API_URL": "https://svitlo-backend-pilot.onrender.com"
+      }
+    },
     "preview": {
       "channel": "preview",
       "autoIncrement": true,
