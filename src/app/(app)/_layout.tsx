@@ -6,6 +6,7 @@ import { metrics, space, typography } from '@/design-system/tokens';
 import { SvitloIcon } from '@/features/svitlo/components/svitlo-icon';
 import { NotificationBootstrap } from '@/features/svitlo/notifications/bootstrap';
 import { palette } from '@/features/svitlo/theme';
+import { WidgetBootstrap } from '@/features/svitlo/widget/bootstrap';
 
 export default function TabLayout() {
   const { width, fontScale } = useWindowDimensions();
@@ -15,6 +16,7 @@ export default function TabLayout() {
   return (
     <>
       <NotificationBootstrap />
+      <WidgetBootstrap />
       <Tabs screenOptions={{
         headerShown: false,
         sceneStyle: { backgroundColor: palette.background },

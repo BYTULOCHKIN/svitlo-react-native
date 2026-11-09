@@ -1,0 +1,29 @@
+plugins {
+  id 'com.android.library'
+  id 'expo-module-gradle-plugin'
+}
+
+group = 'ua.svitlo.widget'
+version = '1.0.0'
+
+android {
+  namespace 'ua.svitlo.widget'
+  defaultConfig { versionCode 1; versionName '1.0.0' }
+  sourceSets.main.res.srcDir("$buildDir/generated/widgetRes")
+  testOptions.unitTests.includeAndroidResources = true
+}
+
+def widgetFonts = tasks.register('widgetFonts', Copy) {
+  from('../../../node_modules/@expo-google-fonts/inter/400Regular/Inter_400Regular.ttf')
+  into("$buildDir/generated/widgetRes/font")
+  rename { 'svitlo_inter.ttf' }
+}
+tasks.named('preBuild').configure { dependsOn(widgetFonts) }
+
+dependencies {
+  implementation 'androidx.work:work-runtime-ktx:2.10.1'
+  testImplementation 'androidx.work:work-testing:2.10.1'
+  testImplementation 'junit:junit:4.13.2'
+  testImplementation 'org.robolectric:robolectric:4.14.1'
+  testImplementation 'org.json:json:20240303'
+}

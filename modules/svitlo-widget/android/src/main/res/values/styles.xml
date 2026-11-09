@@ -1,0 +1,8 @@
+<resources>
+    <style name="SvitloWidgetTheme" parent="android:style/Theme.Material.NoActionBar">
+        <item name="android:fontFamily">@font/svitlo_inter</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowBackground">#1B1B1B</item>
+        <item name="android:colorAccent">#2ECC71</item>
+    </style>
+</resources>

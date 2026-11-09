@@ -62,6 +62,8 @@ export default function RootLayout() {
       <StatusBar style="light" />
       <Stack>
         <Stack.Screen name="(app)" options={{ headerShown: false }} />
+        <Stack.Screen name="widget" options={{ headerShown: false }} />
+        <Stack.Screen name="widget-schedule" options={{ headerShown: false }} />
       </Stack>
     </Providers>
   );
