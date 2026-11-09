@@ -9,12 +9,12 @@ export type InstallationIdentity = z.infer<typeof identitySchema>;
 export const registrationSchema = z.object({ id: z.uuid(), startedAt: z.number().int().positive() });
 export const notificationSchema = z.object({
   id: z.string().min(1).max(200),
-  type: z.literal('schedule-published'),
+  type: z.enum(['schedule-published', 'schedule-changed']),
   createdAt: z.number().int().positive(),
   scheduleDate: dateSchema,
   version: z.string().regex(/^[a-f0-9]{64}$/),
 });
-export type PublicationNotification = z.infer<typeof notificationSchema>;
+export type ScheduleNotification = z.infer<typeof notificationSchema>;
 export const historySchema = z.object({ items: z.array(notificationSchema), nextCursor: z.string().nullable() });
 export type NotificationPage = z.infer<typeof historySchema>;
 export const deliverySchema = z.object({

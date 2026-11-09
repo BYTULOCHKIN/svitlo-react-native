@@ -1,6 +1,6 @@
 import type { NotificationDatabase } from './database';
 
-type Recipient = { history_id: string; push_token: string; schedule_date: string; installation_id: string };
+type Recipient = { history_id: string; push_token: string; schedule_date: string; installation_id: string; type?: 'schedule-published' | 'schedule-changed' };
 type Ticket = { status: 'ok'; id: string } | { status: 'error'; details?: { error: string } };
 
 function parseTickets(value: unknown): Ticket[] {
@@ -25,8 +25,8 @@ function parseTickets(value: unknown): Ticket[] {
 export function publicationMessage(recipient: Recipient) {
   return {
     to: recipient.push_token,
-    title: 'Опубліковано графік',
-    body: `Графік на ${recipient.schedule_date} доступний у застосунку.`,
+    title: recipient.type === 'schedule-changed' ? 'Графік змінено' : 'Опубліковано графік',
+    body: recipient.type === 'schedule-changed' ? `Графік на ${recipient.schedule_date} оновлено. Перегляньте зміни у застосунку.` : `Графік на ${recipient.schedule_date} доступний у застосунку.`,
     sound: 'default',
     channelId: 'svitlo-schedules',
     data: { notificationId: recipient.history_id },
@@ -43,7 +43,7 @@ export async function dispatchPush(database: NotificationDatabase, request: type
     params: [claim],
   }]);
   const recipients = await database.all<Recipient>({
-    sql: `SELECT o.history_id, d.push_token, e.schedule_date, h.installation_id FROM push_outbox o
+    sql: `SELECT o.history_id, d.push_token, e.schedule_date, h.installation_id, e.type FROM push_outbox o
       JOIN notification_history h ON h.id = o.history_id JOIN notification_events e ON e.id = h.event_id
       JOIN installation_delivery d ON d.installation_id = h.installation_id
       WHERE o.claim_key = ? AND d.permission = 'granted' AND d.push_token IS NOT NULL ORDER BY o.history_id`,

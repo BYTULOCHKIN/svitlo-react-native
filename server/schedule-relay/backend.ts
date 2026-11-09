@@ -5,7 +5,8 @@ import { authorizedInternal, internalJson } from '../notifications/internal-http
 import { fetchScheduleSnapshot, kyivToday } from '../notifications/pilot-source';
 import { dispatchPush } from '../notifications/push';
 import { createNotificationRepository } from '../notifications/repository';
-import { createScheduleStore, scheduleResponse, validatedSnapshot } from '../notifications/schedules';
+import { createScheduleChangeRecorder } from '../notifications/schedule-changes';
+import { createScheduleStore, scheduleResponse, snapshotWrite, validatedSnapshot } from '../notifications/schedules';
 
 type Options = {
   database: NotificationDatabase;
@@ -42,6 +43,7 @@ export function createBackendApi(options: Options) {
   const database = options.database;
   const store = createScheduleStore(database);
   const repository = createNotificationRepository(database, now);
+  const changed = createScheduleChangeRecorder(database, now);
   const api = createNotificationApi(repository);
   const source = options.source ?? (date => fetchScheduleSnapshot({ date, now }));
 
@@ -73,8 +75,10 @@ export function createBackendApi(options: Options) {
           const previous = await store.get(date);
           // Initial known schedules establish a baseline; restarts retain it in D1.
           if (initialized && !previous)
-            await repository.publish(snapshot.day);
-          await store.save(snapshot);
+            await repository.publish(snapshot.day, [snapshotWrite(snapshot)]);
+          else if (initialized && previous)
+            await changed(previous, snapshot);
+          else await store.save(snapshot);
           sources.push({ date, valid: true, queues: snapshot.day.queues.length });
         }
         catch (error) { sources.push({ date, valid: false, stage, reason: failureReason(error) }); }

@@ -1,6 +1,6 @@
 import type { ScheduleDay } from '../../src/features/svitlo/models';
-import type { DeliverySettings, InstallationIdentity, NotificationPage, PublicationNotification } from '../../src/features/svitlo/notifications/models';
-import type { NotificationDatabase } from './database';
+import type { DeliverySettings, InstallationIdentity, NotificationPage, ScheduleNotification } from '../../src/features/svitlo/notifications/models';
+import type { NotificationDatabase, SqlQuery } from './database';
 import { dateSchema } from '../../src/features/svitlo/notifications/models';
 
 export class NotificationApiError extends Error {
@@ -9,7 +9,7 @@ export class NotificationApiError extends Error {
   }
 }
 
-async function digest(value: string) {
+export async function digest(value: string) {
   const bytes = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value));
   return Array.from(new Uint8Array(bytes), byte => byte.toString(16).padStart(2, '0')).join('');
 }
@@ -30,7 +30,17 @@ export function canonicalSchedule(day: ScheduleDay) {
     if (end !== 1440)
       throw new NotificationApiError(422, 'Неповний графік');
   }
-  return JSON.stringify({ date: day.date, noOutagesScope: day.noOutagesScope, queues: [...day.queues].sort((a, b) => a.queue.localeCompare(b.queue, 'en', { numeric: true })) });
+  const queues = day.queues.map((queue) => {
+    const intervals: typeof queue.intervals = [];
+    for (const interval of queue.intervals) {
+      const previous = intervals.at(-1);
+      if (previous?.state === interval.state)
+        previous.end = interval.end;
+      else intervals.push({ start: interval.start, end: interval.end, state: interval.state });
+    }
+    return { queue: queue.queue, intervals };
+  }).sort((a, b) => a.queue.localeCompare(b.queue, 'en', { numeric: true }));
+  return JSON.stringify({ date: day.date, noOutagesScope: day.noOutagesScope, queues });
 }
 
 type InstallationRow = { id: string; secret_hash: string; started_at: number };
@@ -51,7 +61,7 @@ export function createNotificationRepository(database: NotificationDatabase, now
       throw new NotificationApiError(401, 'Недійсні дані інсталяції');
   }
 
-  async function publish(day: ScheduleDay) {
+  async function publish(day: ScheduleDay, writes: SqlQuery[] = []) {
     const version = await digest(canonicalSchedule(day));
     const id = `publication:${day.date}`;
     const createdAt = now();
@@ -66,6 +76,7 @@ export function createNotificationRepository(database: NotificationDatabase, now
         JOIN installation_delivery d ON d.installation_id = h.installation_id
         WHERE e.id = ? AND d.permission = 'granted' AND d.push_token IS NOT NULL
         AND e.sequence > d.enabled_after_sequence`, params: [id] },
+      ...writes,
     ]);
     return { id };
   }
@@ -100,7 +111,7 @@ export function createNotificationRepository(database: NotificationDatabase, now
     const params: (string | number)[] = [identity.id];
     if (boundary)
       params.push(boundary.time, boundary.time, boundary.id);
-    const items = await database.all<PublicationNotification>({
+    const items = await database.all<ScheduleNotification>({
       sql: `SELECT h.id, e.type, h.created_at AS createdAt, e.schedule_date AS scheduleDate, e.version
         FROM notification_history h JOIN notification_events e ON h.event_id = e.id
         WHERE h.installation_id = ? ${boundary ? 'AND (h.created_at < ? OR (h.created_at = ? AND h.id < ?))' : ''}

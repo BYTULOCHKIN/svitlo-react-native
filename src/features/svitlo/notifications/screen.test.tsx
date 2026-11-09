@@ -11,10 +11,10 @@ afterEach(() => {
   clients.length = 0;
 });
 
-function show(history = jest.fn(async () => ({ items: [item], nextCursor: null as string | null })), hasLocations = true) {
+function show(history = jest.fn(async () => ({ items: [item], nextCursor: null as string | null })), hasLocations = true, targetId?: string) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } });
   clients.push(client);
-  render(<QueryClientProvider client={client}><NotificationsScreen client={{ history }} hasLocations={hasLocations} /></QueryClientProvider>);
+  render(<QueryClientProvider client={client}><NotificationsScreen client={{ history }} hasLocations={hasLocations} targetId={targetId} /></QueryClientProvider>);
   return history;
 }
 
@@ -23,6 +23,16 @@ it('shows loading followed by a Ukrainian publication card', async () => {
   expect(screen.getByLabelText('Завантаження сповіщень')).toBeOnTheScreen();
   expect(await screen.findByRole('header', { name: 'Опубліковано графік' })).toBeOnTheScreen();
   expect(screen.getByText(/Графік на 10 жовтня 2026/)).toBeOnTheScreen();
+});
+
+it('distinguishes changes from publications and shows the event time separately from its schedule date', async () => {
+  const change = { ...item, id: 'change:2026-11-10:1', type: 'schedule-changed', scheduleDate: '2026-11-10', createdAt: Date.parse('2026-11-09T08:30:00Z') };
+  show(jest.fn().mockResolvedValue({ items: [change, item], nextCursor: null }), true, change.id);
+  expect(await screen.findByRole('header', { name: 'Графік змінено' })).toBeOnTheScreen();
+  expect(screen.getByRole('header', { name: 'Опубліковано графік' })).toBeOnTheScreen();
+  expect(screen.getByText(/Графік на 10 листопада 2026/)).toBeOnTheScreen();
+  expect(screen.getByText(/9 листопада.*10:30/)).toBeOnTheScreen();
+  expect(screen.getByLabelText('Сповіщення, яке ви відкрили')).toHaveProp('testID', `notification-${change.id}`);
 });
 
 it('renders an empty history without fabricating messages', async () => {

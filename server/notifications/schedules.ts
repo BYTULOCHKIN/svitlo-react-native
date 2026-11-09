@@ -1,9 +1,10 @@
 import type { ScheduleDay } from '../../src/features/svitlo/models';
-import type { NotificationDatabase } from './database';
+import type { NotificationDatabase, SqlQuery } from './database';
 import { dateSchema } from '../../src/features/svitlo/notifications/models';
 import { canonicalSchedule } from './repository';
 
 export type ScheduleSnapshot = { day: ScheduleDay; verifiedAt: number };
+export type StoredSnapshot = ScheduleSnapshot & { revision: number };
 
 function record(value: unknown): value is Record<string, unknown> {
   return !!value && typeof value === 'object' && !Array.isArray(value);
@@ -41,20 +42,23 @@ export function validatedSnapshot(value: unknown, date: string, now = Date.now()
   return snapshot;
 }
 
+export function snapshotWrite(snapshot: ScheduleSnapshot): SqlQuery {
+  return {
+    sql: `INSERT INTO schedule_snapshots (date, payload, verified_at) VALUES (?, ?, ?)
+      ON CONFLICT(date) DO UPDATE SET payload = excluded.payload, verified_at = excluded.verified_at
+      WHERE excluded.verified_at >= schedule_snapshots.verified_at`,
+    params: [snapshot.day.date, canonicalSchedule(parseSchedule(snapshot.day)), snapshot.verifiedAt],
+  };
+}
+
 export function createScheduleStore(database: NotificationDatabase) {
   return {
     async save(snapshot: ScheduleSnapshot) {
-      const payload = canonicalSchedule(parseSchedule(snapshot.day));
-      await database.batch([{
-        sql: `INSERT INTO schedule_snapshots (date, payload, verified_at) VALUES (?, ?, ?)
-          ON CONFLICT(date) DO UPDATE SET payload = excluded.payload, verified_at = excluded.verified_at
-          WHERE excluded.verified_at >= schedule_snapshots.verified_at`,
-        params: [snapshot.day.date, payload, snapshot.verifiedAt],
-      }]);
+      await database.batch([snapshotWrite(snapshot)]);
     },
-    async get(date: string) {
-      const row = await database.first<{ payload: string; verified_at: number }>({ sql: 'SELECT payload, verified_at FROM schedule_snapshots WHERE date = ?', params: [date] });
-      return row ? { day: parseSchedule(JSON.parse(row.payload)), verifiedAt: row.verified_at } : undefined;
+    async get(date: string): Promise<StoredSnapshot | undefined> {
+      const row = await database.first<{ payload: string; verified_at: number; revision: number }>({ sql: 'SELECT payload, verified_at, revision FROM schedule_snapshots WHERE date = ?', params: [date] });
+      return row ? { day: parseSchedule(JSON.parse(row.payload)), verifiedAt: row.verified_at, revision: row.revision } : undefined;
     },
   };
 }
