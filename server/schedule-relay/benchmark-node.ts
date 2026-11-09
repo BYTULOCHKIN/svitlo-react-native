@@ -1,6 +1,6 @@
 import { randomBytes, randomUUID } from 'node:crypto';
-import { readFileSync, writeFileSync } from 'node:fs';
-import fixture from '../../src/features/svitlo/fixtures/poe-2026-10-10.json';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import fixture from '../../src/features/svitlo/fixtures/poe-2026-11-09.json';
 import { createHttpDatabase } from '../notifications/http-database';
 import { kyivToday, validatePilotHtml } from '../notifications/pilot-source';
 import { createBackendApi } from './backend';
@@ -12,13 +12,20 @@ async function main() {
   if (new URL(url).hostname !== 'svitlo-notifications-storage-benchmark.svitlonorify.workers.dev' || !tokenFile)
     throw new Error('Use the dedicated storage benchmark Worker and token file');
   let gatewayRequests = 0;
+  let metrics = { queries: 0, rowsRead: 0, rowsWritten: 0, dbMs: 0 };
   const database = createHttpDatabase({ url, token: readFileSync(tokenFile, 'utf8').trim(), request: async (input, init) => {
     gatewayRequests++;
-    return fetch(input, init);
+    const response = await fetch(input, init);
+    if (!response.headers.has('X-Svitlo-D1-queries'))
+      throw new Error('Use the instrumented benchmark gateway');
+    for (const key of Object.keys(metrics) as (keyof typeof metrics)[])
+      metrics[key] += Number(response.headers.get(`X-Svitlo-D1-${key}`));
+    return response;
   } });
   const results: unknown[] = [];
   const parsed = validatePilotHtml(fixture.html, fixture.date);
-  for (let iteration = 1; iteration <= 3; iteration++) {
+  const iterations = process.env.SVITLO_BENCHMARK_LONG_HISTORY_ONLY === '1' ? [4] : [1, 2, 3, 4];
+  for (const iteration of iterations) {
     await database.batch(['push_outbox', 'notification_history', 'installation_delivery', 'installations', 'notification_events', 'schedule_snapshots', 'backend_jobs'].map(name => ({ sql: `DELETE FROM ${name}`, params: [] })));
     const users = Array.from({ length: 100 }, () => ({ id: randomUUID(), hash: randomBytes(32).toString('hex'), token: `ExponentPushToken[svitloTest${randomBytes(9).toString('base64url')}]` }));
     const payload = JSON.stringify(users);
@@ -28,6 +35,9 @@ async function main() {
       { sql: `INSERT INTO installation_delivery (installation_id, permission, push_token, enabled_after_sequence)
         SELECT json_extract(value, '$.id'), 'granted', json_extract(value, '$.token'), 0 FROM json_each(?)`, params: [payload] },
     ]);
+    const historyDays = iteration === 4 ? 30 : 0;
+    if (historyDays)
+      await seedHistory(database, historyDays);
     let now = Date.now();
     let tomorrow = false;
     let expoRequests = 0;
@@ -56,6 +66,7 @@ async function main() {
     now += 60000;
     tomorrow = true;
     gatewayRequests = 0;
+    metrics = { queries: 0, rowsRead: 0, rowsWritten: 0, dbMs: 0 };
     const started = performance.now();
     const cpuStart = process.cpuUsage();
     const response = await api(tick());
@@ -63,15 +74,35 @@ async function main() {
     const cpu = process.cpuUsage(cpuStart);
     const wallMs = Math.round(performance.now() - started);
     const requests = gatewayRequests;
+    const publicationMetrics = { ...metrics };
     const replay = await (await createBackendApi(options)(tick())).json();
     const history = await database.first<{ count: number; targets: number }>({ sql: 'SELECT COUNT(*) AS count, COUNT(DISTINCT installation_id) AS targets FROM notification_history', params: [] });
-    if (response.status !== 200 || result.accepted !== 100 || expoRequests !== 1 || messages !== 100 || history?.count !== 100 || history.targets !== 100 || !replay.skipped)
+    if (response.status !== 200 || result.accepted !== 100 || expoRequests !== 1 || messages !== 100 || history?.count !== 100 * (historyDays + 1) || history.targets !== 100 || !replay.skipped)
       throw new Error('Node benchmark did not preserve the 100-recipient contract');
-    const summary = { iteration, gatewayRequests: requests, expoRequests, messages, accepted: result.accepted, history: history.count, targets: history.targets, replaySkipped: replay.skipped, nodeCpuMs: Math.round((cpu.user + cpu.system) / 1000), wallMs };
+    now += 60000;
+    gatewayRequests = 0;
+    metrics = { queries: 0, rowsRead: 0, rowsWritten: 0, dbMs: 0 };
+    const idle = await (await api(tick())).json();
+    if (idle.accepted !== 0 || expoRequests !== 1)
+      throw new Error('Unchanged schedules sent duplicate pushes');
+    const summary = { iteration, historyDays, gatewayRequests: requests, expoRequests, messages, accepted: result.accepted, history: history.count, targets: history.targets, replaySkipped: replay.skipped, nodeCpuMs: Math.round((cpu.user + cpu.system) / 1000), wallMs, publicationMetrics, idle: { gatewayRequests, ...metrics } };
     results.push(summary);
     console.log(JSON.stringify(summary));
   }
+  mkdirSync('.expo/notifications', { recursive: true });
   writeFileSync('.expo/notifications/backend-benchmark-results.json', JSON.stringify(results, null, 2));
+}
+
+async function seedHistory(database: ReturnType<typeof createHttpDatabase>, days: number) {
+  const events = Array.from({ length: days }, (_, index) => ({ id: randomUUID(), date: new Date(Date.now() - (index + 1) * 86400000).toISOString().slice(0, 10) }));
+  await database.batch([
+    { sql: `INSERT INTO notification_events (id, type, schedule_date, version, created_at)
+      SELECT json_extract(value, '$.id'), 'schedule-published', json_extract(value, '$.date'), ?, ? FROM json_each(?)`, params: ['0'.repeat(64), Date.now() - 86400000, JSON.stringify(events)] },
+    { sql: `INSERT INTO notification_history (id, installation_id, event_id, created_at)
+      SELECT e.id || ':' || i.id, i.id, e.id, e.created_at FROM notification_events e CROSS JOIN installations i`, params: [] },
+    { sql: `INSERT INTO push_outbox (history_id, state, claim_key, ticket_id)
+      SELECT id, 'sent', 'historical-seed', 'synthetic' FROM notification_history`, params: [] },
+  ]);
 }
 
 void main().catch(() => {

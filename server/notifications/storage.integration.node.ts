@@ -7,6 +7,18 @@ import { createStorageGateway } from './storage-gateway';
 
 const token = 'ab'.repeat(32);
 const url = 'https://storage.invalid';
+
+test('outbox claim reads and updates use the claim index rather than scanning delivered history', async () => {
+  const local = openLocalDatabase(':memory:');
+  try {
+    for (const sql of ['SELECT history_id FROM push_outbox WHERE claim_key = ?', 'UPDATE push_outbox SET state = \'sent\' WHERE claim_key = ?']) {
+      const plan = await local.database.all<{ detail: string }>({ sql: `EXPLAIN QUERY PLAN ${sql}`, params: ['new-claim'] });
+      assert.ok(plan.some(step => step.detail.includes('USING INDEX push_outbox_claim_key')));
+    }
+  }
+  finally { local.close(); }
+});
+
 function command(value: unknown, secret = token) {
   return new Request(`${url}/internal/database`, {
     method: 'POST',

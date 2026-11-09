@@ -68,3 +68,23 @@ npm.cmd run notifications:benchmark
 З Cloudflare tail захоплено **36 gateway invocations** під час підготовки та двох серій вимірювань: усі `outcome: ok`, **CPU 0–3 ms**, медіана 1 ms, p95 2 ms. Tail захопив частину запитів; не заявляється покриття CPU кожної операції. Бізнес-логіки та Expo tickets у gateway немає. Це позитивний результат щодо нового кандидата, але **повний gate 02 залишається відкритим** до розгортання Render, фактичного cron/source/native тесту, перевірки холодного запуску, квот і довгої історії.
 
 Окремий live smoke чистої Node-збірки з production gateway/D1 отримав живі графіки на 2026-10-11 та 2026-10-12 по 12 черг, цикл 2058 ms, `stale: false`, без старих публікацій. Це локальний Node, а не Render. [Налаштування та відтворення нового кандидата](../schedule-relay/README.md).
+
+## Повторне вимірювання 9 листопада 2026 та індекс outbox
+
+Виділений `svitlo-notifications-storage-benchmark` використовує той самий storage gateway/D1 adapter та додаткову обгортку, яка повертає агреговані D1 metadata в заголовках і логах. Production gateway цієї обгортки не має. Прив'язку до disposable D1 `65119682-1f27-4a33-a4d0-978318eb34a0` перевірено перед seed; production D1 не очищувалась. Джерело benchmark — захоплений новий HTML за 9 листопада; Node CPU/wall вимірюються локально, не на Render. Mock Expo не виконує реальних доставок.
+
+| Сценарій | Mock messages / history | Publication rows read / written | Unchanged-cycle rows read / written | Wall локального Node |
+| --- | --- | --- | --- | --- |
+| Три початкові повтори без старої історії, до індексу | 100 / 100 | 17362 / 1109 | 211 / 5 | 1830–2009 ms |
+| 30 днів: 3000 history та 3000 sent outbox, до індексу | 100 / 3100 | 29365 / 1109 | 6211 / 5 | 2025 ms |
+| Та сама накопичена історія після індексу claim_key | 100 / 3100 | 23267 / 1309 | 12 / 5 | 3620 ms |
+
+У кожному сценарії нова публікація створила 100 різних карток, відправила один mock-пакет, а повтор із новим backend instance у тому самому слоті був skipped. Наступний звичайний хвилинний цикл із незмінними графіками не відправляв додаткового пакета. Нова публікація: 14 gateway HTTP calls, 17 SQL statements сумарно; unchanged cycle — 12 calls / 12 statements.
+
+Без індексу SELECT/UPDATE за claim_key сканували вже доставлені записи. 6211 reads × 1440 = **8 943 840 rows read/day**, що перевищує [D1 Free 5 млн/day](https://developers.cloudflare.com/d1/platform/pricing/). Додано `0005-outbox-claim-index.sql` та регресійний EXPLAIN QUERY PLAN для читання й оновлення claim. Після індексу базовий цикл потребує **17 280 rows read/day та 7200 rows written/day**; одна виміряна публікація на 100 інсталяцій — додатково 23267 reads / 1309 writes. Це розрахунок зазначеного серверного сценарію; клієнтські читання, майбутні зміни/попередження та інше навантаження додаються окремо.
+
+Cloudflare tail захопив 88 gateway invocations, усі outcome: ok; CPU 0–8 ms, p95 4 ms, максимум 7 SQL statements в одному invocation. Tail покриває частину операцій, не весь benchmark і не всі майбутні cold invocations. Ліміти звірено з [Workers](https://developers.cloudflare.com/workers/platform/limits/) та [D1](https://developers.cloudflare.com/d1/platform/limits/); batch також має окремі правила підрахунку invocation queries. Спостережені CPU не перевищили Workers Free 10 ms.
+
+Індекс перевірено на тестовій D1, потім ідемпотентно застосовано до production через тимчасовий authenticated Worker, який приймав тільки фіксовану міграцію, без довільного SQL. Наявність індексу та production API HTTP 200 / 12 підчерг / stale: false перевірено. Основний SQL gateway не отримав DDL-правил. Тимчасовий Worker видалено; синтетичні дані benchmark очищено, tail закрито. Файл міграції можна повторно застосувати звичайним Wrangler: CREATE INDEX IF NOT EXISTS безпечний для вже наявного індексу.
+
+Результат: джерело/cron на Render, Android push/tap, перезапуск і виміряні серверні сценарії пілота підтверджені. Це не доставка на 100 фізичних пристроїв, не вимірювання Node CPU на Render і не фінальне приймання майбутніх сценаріїв задачі 15. iOS/APNs і окремий постійний WireGuard peer залишаються відкритими платформними/операційними пунктами.

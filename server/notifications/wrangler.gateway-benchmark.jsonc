@@ -1,7 +1,7 @@
 {
   "$schema": "../../node_modules/wrangler/config-schema.json",
   "name": "svitlo-notifications-storage-benchmark",
-  "main": "gateway-worker.ts",
+  "main": "gateway-benchmark-worker.ts",
   "compatibility_date": "2026-10-11",
   "workers_dev": true,
   "d1_databases": [{
