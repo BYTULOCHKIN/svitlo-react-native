@@ -1,8 +1,11 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
+import { createNotificationsClient } from '../../src/features/svitlo/notifications/client';
+import { createNotificationApi } from './api';
 import { forwardBackend, triggerBackend } from './gateway-worker';
 import { createHttpDatabase } from './http-database';
 import { openLocalDatabase } from './local-database';
+import { createNotificationRepository } from './repository';
 import { createStorageGateway } from './storage-gateway';
 
 const token = 'ab'.repeat(32);
@@ -106,4 +109,37 @@ test('compatibility forwarding preserves installation identity and date without 
   });
   assert.equal(response.status, 200);
   await assert.rejects(forwardBackend(new Request('https://storage.invalid/v1/installations', { method: 'POST', body: 'x'.repeat(4097) }), 'https://backend.invalid'));
+});
+
+test('large grouped-warning pages retain every location and paginate through the bounded storage adapter', async () => {
+  const local = openLocalDatabase(':memory:');
+  const gateway = createStorageGateway(local.database, token);
+  const database = createHttpDatabase({ url, token, request: async (input, init) => gateway(new Request(String(input), init)) });
+  const api = createNotificationApi(createNotificationRepository(database));
+  const identity = { id: crypto.randomUUID(), secret: 'ab'.repeat(32) };
+  const client = createNotificationsClient({ url: 'https://test.invalid', getIdentity: async () => identity, request: async (input, init) => api(new Request(String(input), init)) });
+  try {
+    await client.connect();
+    const locations = Array.from({ length: 50 }, (_, index) => ({ id: `${'a'.repeat(60)}${String(index).padStart(4, '0')}`, name: 'Д'.repeat(20) }));
+    const details = JSON.stringify({ queue: '1.1', outageAt: Date.parse('2026-11-09T08:00:00Z'), locations });
+    for (let index = 0; index < 51; index++) {
+      const id = `large-warning:${index}`;
+      await local.database.batch([
+        { sql: 'INSERT INTO notification_events (id,type,schedule_date,version,created_at) VALUES (?,?,?,?,?)', params: [id, 'outage-warning', '2026-11-09', 'ab'.repeat(32), 1000 + index] },
+        { sql: 'INSERT INTO notification_history (id,installation_id,event_id,created_at,details) VALUES (?,?,?,?,?)', params: [id, identity.id, id, 1000 + index, details] },
+      ]);
+    }
+    const first = await client.history();
+    assert.equal(first.items.length, 50);
+    assert.ok(first.nextCursor);
+    for (const item of first.items) {
+      assert.equal(item.type, 'outage-warning');
+      if (item.type === 'outage-warning')
+        assert.deepEqual(item.locations, locations);
+    }
+    const next = await client.history(first.nextCursor!);
+    assert.equal(next.items.length, 1);
+    assert.equal(next.nextCursor, null);
+  }
+  finally { local.close(); }
 });

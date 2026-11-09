@@ -10,6 +10,7 @@ import { createBackendApi } from '../schedule-relay/backend';
 import { openLocalDatabase } from './local-database';
 import { formOutageWarnings, kyivTimestamp, outageCandidates } from './outage-warnings';
 import { dispatchPush, publicationMessage } from './push';
+import { createNotificationRepository } from './repository';
 import { createScheduleChangeRecorder } from './schedule-changes';
 import { createScheduleStore } from './schedules';
 
@@ -337,4 +338,46 @@ test('warning migration preserves silent changes, original histories, tickets, p
     assert.deepEqual(sqlite.prepare('PRAGMA foreign_key_check').all(), []);
   }
   finally { sqlite.close(); }
+});
+
+test('a moved future outage removes the old job and warns only at its new ten-minute target', async () => {
+  const p = pipeline();
+  try {
+    const client = await subscribe(p);
+    await p.tick();
+    p.advance(60000);
+    p.days.set(date, day(['1.1', '1.2'], 630, 690));
+    await p.tick();
+    p.advance(60000);
+    await p.tick();
+    assert.equal(p.messages.filter(message => message.title === 'Відключення за 10 хвилин').length, 0);
+    p.advance(30 * 60000);
+    await p.tick();
+    const warnings = (await client.history()).items.filter(item => item.type === 'outage-warning');
+    assert.equal(warnings.length, 1);
+    assert.equal(warnings[0].outageAt, Date.parse('2026-11-09T08:30:00Z'));
+    assert.equal(p.messages.filter(message => message.title === 'Відключення за 10 хвилин').length, 1);
+  }
+  finally { p.close(); }
+});
+
+test('turning regional push off cancels queued publications without losing history or backfilling on re-enable', async () => {
+  const p = pipeline();
+  try {
+    const client = await subscribe(p);
+    const repository = createNotificationRepository(p.database, p.time);
+    await repository.publish({ ...day(), date: '2026-11-10' });
+    await client.updatePreferences({ revision: 2, regionalPushEnabled: false, locations: [home, work] });
+    await dispatchPush(p.database, p.options.transport, { now: p.time });
+    assert.equal(p.messages.length, 0);
+    assert.equal((await client.history()).items.length, 1);
+    await client.updatePreferences({ revision: 3, regionalPushEnabled: true, locations: [home, work] });
+    await dispatchPush(p.database, p.options.transport, { now: p.time });
+    assert.equal(p.messages.length, 0);
+    await repository.publish({ ...day(), date: '2026-11-11' });
+    await dispatchPush(p.database, p.options.transport, { now: p.time });
+    assert.equal(p.messages.length, 1);
+    assert.equal((await client.history()).items.length, 2);
+  }
+  finally { p.close(); }
 });

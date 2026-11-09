@@ -14,7 +14,7 @@ export default function E2EReset() {
       storage.clearAll();
       notificationsClient?.reset();
       queryClient.clear();
-      useLocations.setState({ locations: [], selectedId: null });
+      useLocations.setState({ locations: [], selectedId: null, notificationRevision: 1, regionalPushEnabled: true });
       router.replace('/');
     }
   }, [queryClient]);
