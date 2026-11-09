@@ -5,22 +5,26 @@ import { parseFragment } from 'parse5';
 type Cell = { classes: string[]; text: string; span: number };
 
 function toState(classes: string[]): PowerState {
-  if (classes.includes('light_1'))
+  if (classes.includes('light_1') || classes.includes('gpv-s1'))
     return 'on';
-  if (classes.includes('light_2'))
+  if (classes.includes('light_2') || classes.includes('gpv-s2'))
     return 'off';
-  if (classes.includes('light_3'))
+  if (classes.includes('light_3') || classes.includes('gpv-s3'))
     return 'possible';
   return 'unknown';
 }
 
 function readRow(cells: Cell[], previousQueue: string) {
+  const modern = cells[0]?.classes.includes('gpv-q');
   const hasQueue = cells[0]?.classes.includes('turnoff-scheduleui-table-queue');
-  const queue = hasQueue ? cells[0].text.replace(/\D/g, '') : previousQueue;
-  const subqueue = cells[hasQueue ? 1 : 0]?.text.trim();
-  const slots = cells.slice(hasQueue ? 2 : 1).flatMap(cell => Array.from({ length: cell.span }, () => toState(cell.classes)));
-  if (!queue || !/^\d+$/.test(subqueue ?? '') || slots.length === 0 || slots.length > 48)
+  const [queue, subqueue] = modern
+    ? cells[0].text.trim().split('.')
+    : [hasQueue ? cells[0].text.replace(/\D/g, '') : previousQueue, cells[hasQueue ? 1 : 0]?.text.trim()];
+  const slots = cells.slice(modern ? 1 : hasQueue ? 2 : 1).flatMap(cell => Array.from({ length: cell.span }, () => toState(cell.classes)));
+  if (!queue || !/^\d+$/.test(subqueue ?? '') || slots.length === 0 || slots.length > 48
+    || (modern && (!/^\d+\.\d+$/.test(cells[0].text.trim()) || slots.length !== 48 || cells.slice(1).some(cell => !cell.classes.includes('gpv-c'))))) {
     throw new Error('Неочікуваний формат таблиці графіка');
+  }
   const intervals: QueueSchedule['intervals'] = [];
   slots.forEach((state, index) => {
     const previous = intervals.at(-1);
@@ -55,7 +59,7 @@ function text(node: Node): string {
 
 export function parsePoeHtml(html: string, date: string): ScheduleDay {
   const root = parseFragment(html);
-  const table = elements(root, 'table').find(node => attr(node, 'class').split(/\s+/).includes('turnoff-scheduleui-table'));
+  const table = elements(root, 'table').find(node => attr(node, 'class').split(/\s+/).some(name => ['turnoff-scheduleui-table', 'gpv-table'].includes(name)));
   if (!table && confirmsNoOutages(root, date))
     return { date, queues: [], noOutagesScope: 'region' };
   const queues: QueueSchedule[] = [];

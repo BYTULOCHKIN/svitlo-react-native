@@ -1,12 +1,26 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import fixture from '../../src/features/svitlo/fixtures/poe-2026-10-10.json';
+import modernFixture from '../../src/features/svitlo/fixtures/poe-2026-11-09.json';
 import { openLocalDatabase } from './local-database';
 import { fetchScheduleSnapshot, readSourceText, validatePilotHtml } from './pilot-source';
 import { createScheduleStore, scheduleResponse, validatedSnapshot } from './schedules';
 
 const day = validatePilotHtml(fixture.html, fixture.date);
 const now = Date.parse('2026-10-10T12:00:00Z');
+
+test('new live HTML passes source and snapshot validation with all twelve queues', async () => {
+  const verifiedAt = Date.parse('2026-11-09T07:26:47Z');
+  const snapshot = await fetchScheduleSnapshot({
+    date: modernFixture.date,
+    now: () => verifiedAt,
+    request: async () => new Response(modernFixture.html),
+  });
+  assert.equal(snapshot.day.queues.length, 12);
+  assert.deepEqual(validatedSnapshot(snapshot, modernFixture.date, verifiedAt), snapshot);
+  assert.throws(() => validatePilotHtml(modernFixture.html, '2026-11-10'));
+  assert.throws(() => validatePilotHtml(modernFixture.html.replace('gpv-c gpv-s1', 'gpv-c gpv-s4'), modernFixture.date));
+});
 
 test('public schedules return a cached complete day and retain its verification time when stale', async () => {
   const local = openLocalDatabase(':memory:');

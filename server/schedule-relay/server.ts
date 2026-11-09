@@ -1,14 +1,19 @@
 import { Buffer } from 'node:buffer';
 import { createServer } from 'node:http';
 import { createHttpDatabase } from '../notifications/http-database';
+import { fetchScheduleSnapshot } from '../notifications/pilot-source';
 import { createBackendApi } from './backend';
 import { createSourceDiagnosticsApi } from './source-diagnostics';
+import { checkSourceTransport, createSourceTransport } from './source-transport';
+
+const sourceTransport = createSourceTransport(process.env.POE_PROXY_URL);
 
 const api = createSourceDiagnosticsApi(process.env.TICK_RUN_TOKEN ?? '', createBackendApi({
   database: createHttpDatabase({ url: process.env.STORAGE_API_URL ?? '', token: process.env.STORAGE_API_TOKEN ?? '' }),
   tickToken: process.env.TICK_RUN_TOKEN ?? '',
   expoAccessToken: process.env.EXPO_ACCESS_TOKEN,
-}));
+  source: date => fetchScheduleSnapshot({ date, request: sourceTransport.request }),
+}), process.env.POE_PROXY_URL ? () => checkSourceTransport(sourceTransport.request) : undefined);
 const port = Number(process.env.PORT ?? 10000);
 if (!Number.isInteger(port) || port < 1 || port > 65535)
   throw new Error('Invalid PORT');
@@ -44,5 +49,10 @@ const server = createServer(async (incoming, outgoing) => {
 server.requestTimeout = 20000;
 server.headersTimeout = 10000;
 server.listen(port, '0.0.0.0', () => console.log('Svitlo backend listening'));
-process.on('SIGTERM', () => server.close());
-process.on('SIGINT', () => server.close());
+function shutdown() {
+  return server.close(() => {
+    void sourceTransport.close();
+  });
+}
+process.on('SIGTERM', shutdown);
+process.on('SIGINT', shutdown);

@@ -56,8 +56,8 @@ export async function sourceDiagnostics() {
   catch (error) { return { hostname, dnsCode: safeCode(error) }; }
 }
 
-export function createSourceDiagnosticsApi(token: string, next: (request: Request) => Promise<Response>, run = sourceDiagnostics) {
-  let pending: ReturnType<typeof sourceDiagnostics> | undefined;
+export function createSourceDiagnosticsApi(token: string, next: (request: Request) => Promise<Response>, run: () => Promise<unknown> = sourceDiagnostics) {
+  let pending: Promise<unknown> | undefined;
   return async (request: Request) => {
     if (new URL(request.url).pathname !== '/internal/source-diagnostics')
       return next(request);

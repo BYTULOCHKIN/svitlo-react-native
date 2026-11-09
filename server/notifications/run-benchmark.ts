@@ -20,7 +20,7 @@ async function call(path: string, body: unknown) {
 async function main() {
   const results: unknown[] = [];
   const users = Array.from({ length: 100 }, () => ({ id: randomUUID(), secretHash: randomBytes(32).toString('hex'), token: `ExponentPushToken[svitloTest${randomBytes(9).toString('base64url')}]` }));
-  const sources = process.env.SVITLO_BENCHMARK_SOURCES?.split(',') ?? ['json', 'table', 'no-outages'];
+  const sources: string[] = process.env.SVITLO_BENCHMARK_SOURCES?.split(',') ?? ['json', 'table', 'no-outages'];
   if (sources.some(source => !['json', 'table', 'no-outages'].includes(source)))
     throw new Error('Invalid benchmark sources');
   for (const source of sources) {
