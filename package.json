@@ -59,7 +59,8 @@
     "test:watch": "pnpm run test --watch",
     "install-maestro": "curl -Ls 'https://get.maestro.mobile.dev' | bash",
     "e2e-test": "maestro test .maestro/ -e APP_ID=com.obytes.development",
-    "test:e2e:svitlo": "maestro test .maestro/svitlo/ -e APP_ID=ua.svitlo.rn.development -e DEV_URL=svitlo-rn-development://expo-development-client/?url=http%3A%2F%2F127.0.0.1%3A8082 -e RESET_URL=svitlo-rn-development://e2e-reset"
+    "test:e2e:svitlo": "maestro test .maestro/svitlo/ -e APP_ID=ua.svitlo.rn.development -e DEV_URL=svitlo-rn-development://expo-development-client/?url=http%3A%2F%2F127.0.0.1%3A8082 -e RESET_URL=svitlo-rn-development://e2e-reset",
+    "start:widget": "cross-env EXPO_PUBLIC_APP_ENV=development EXPO_PUBLIC_E2E=0 expo start --dev-client --localhost --port 8083"
   },
   "dependencies": {
     "@expo-google-fonts/inter": "^0.4.2",

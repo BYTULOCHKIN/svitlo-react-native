@@ -20,9 +20,17 @@
 - 112 тестів Svitlo PASS, включно з 9 новими: JS/native sync змін локацій, переходи з віджета, завтрашня дата та кеш за помилки API.
 - Серверні регресії: 58/58 PASS. Перший sandbox-запуск не дозволяв локальний bind тестового проксі; повтор із дозволом на локальний HTTP завершився успішно.
 - TypeScript і design generation check PASS. Повний lint перевіряється без згенерованих Gradle-звітів; зміна ignores стосується лише build/.gradle локальних Android-модулів.
-- Фізичне приймання Samsung і APK — окремий етап [09](../../plans/svitlo-android-widget/09-samsung-widget-acceptance.issue.md). Фінальний APK готується після виправлення DST; пристроєві сценарії ще не позначені PASS. Попередні APK build 4–5 скасовані в черзі й не встановлювалися.
+- Фізичне приймання Samsung і APK — окремий етап [09](../../plans/svitlo-android-widget/09-samsung-widget-acceptance.issue.md). За уточненням користувача поточна перевірка виконується через Metro й локальний development APK; production-збірку скасовано. Пристроєві сценарії ще не позначені PASS, production APK залишається етапом після dev-приймання.
 - Production CNG, JS-бандл і merged manifest PASS; у production-пакеті перевірені provider/configuration/system receiver та WorkManager initializer. Для локального бандла використано Node 22 і новий Gradle daemon; старий daemon підхоплював несумісний Node.
 - Native preview `.tmp/widget-native-preview.png`: контрольований графік з імітованою недоступністю API; перевірені 300×400 dp та мінімальні 250×320 dp зі звичайним шрифтом.
 - Великий системний шрифт і TalkBack виключені з перевірок за уточненням користувача. Віджет не змінює ці системні налаштування для приймання.
 
 З кореня після Expo Android prebuild: `cd android`, потім `./gradlew :svitlo-widget:testDebugUnitTest :svitlo-widget:assembleRelease`. Потрібні сумісний JDK (використано Android Studio JBR), Android SDK та дозволений доступ до залежностей. Тестові дані ізольовані, реальних push вони не надсилають.
+
+## Dev-режим
+
+`npm run start:widget` запускає звичайне development-сховище та Metro на `http://localhost:8083`. Для Samsung через USB налаштовано `adb reverse tcp:8083 tcp:8083`.
+
+Після додавання або зміни Kotlin/XML потрібне локальне оновлення development APK; Metro обслуговує зміни JS. Firebase-конфігурація dev-пакета зберігається приватно, а production-пакет не перевстановлюється. Підпис локального debug keystore звірено зі встановленим dev-клієнтом: оновлення через `install -r` зберігає його дані.
+
+Локальний development APK успішно зібрано (568 Gradle tasks, 5 хв 38 с), підпис звірено, установлено через `adb install -r` без очищення даних. На Samsung підтверджено роботу Metro, наявність widget provider і передачу п’яти збережених dev-локацій у нативне сховище. Повне приймання взаємодії у лаунчері та фінальний production APK ще попереду; це не позначено як production PASS.
